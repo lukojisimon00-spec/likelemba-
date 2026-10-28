@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#146B50">
+  <meta name="description" content="LIKELEMBA facilite l'organisation et le suivi des groupes de tontine.">
+  <title>LIKELEMBA — Ensemble, avançons</title>
+  <style>
+    :root {
+      --green: #146B50;
+      --dark: #103D31;
+      --cream: #F6F7F2;
+      --white: #FFFFFF;
+      --text: #24352F;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 18px 20px;
+      background: var(--white);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #E6EBE7;
+    }
+
+    .logo {
+      font-size: 23px;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -1px;
+    }
+
+    .tag {
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 900px;
+      margin: auto;
+      padding: 55px 20px;
+    }
+
+    .hero {
+      background: var(--dark);
+      color: var(--white);
+      padding: 35px 25px;
+      border-radius: 22px;
+    }
+
+    .eyebrow {
+      color: #BDE8D3;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    h1 {
+      font-size: clamp(34px, 8vw, 54px);
+      line-height: 1.12;
+      margin: 15px 0;
+    }
+
+    .hero p {
+      color: #E0EEE7;
+      max-width: 540px;
+    }
+
+    .button {
+      display: inline-block;
+      background: #D4F0DF;
+      color: var(--dark);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 750;
+      text-decoration: none;
+      margin-top: 12px;
+    }
+
+    section {
+      padding: 35px 0;
+    }
+
+    h2 {
+      color: var(--dark);
+      font-size: 27px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    .feature {
+      padding: 22px;
+      background: var(--white);
+      border: 1px solid #E5EAE6;
+      border-radius: 15px;
+    }
+
+    .feature h3 {
+      margin-top: 0;
+      color: var(--green);
+    }
+
+    .notice {
+      background: #E8F2EB;
+      padding: 18px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px 20px;
+      color: #65746C;
+      font-size: 13px;
+    }
+
+    @media (min-width: 650px) {
+      .features {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      main {
+        padding-top: 70px;
+      }
+
+      .hero {
+        padding: 55px 45px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">LIKELEMBA</div>
+    <div class="tag">ENSEMBLE, AVANÇONS</div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">La solidarité organisée</div>
+      <h1>Ensemble, nos projets avancent.</h1>
+      <p>
+        LIKELEMBA ambitionne de simplifier l'organisation des
+        groupes de tontine, le suivi des contributions et la
+        transparence entre les membres.
+      </p>
+      <a class="button" href="#fonctionnalites">
+        Découvrir le projet
+      </a>
+    </div>
+
+    <section id="fonctionnalites">
+      <h2>Une meilleure organisation, ensemble.</h2>
+      <div class="features">
+        <article class="feature">
+          <h3>Groupes organisés</h3>
+          <p>Préparez un espace pour réunir les membres et suivre les activités du groupe.</p>
+        </article>
+
+        <article class="feature">
+          <h3>Suivi des cycles</h3>
+          <p>Visualisez les périodes de contribution et les tours prévus du groupe.</p>
+        </article>
+
+        <article class="feature">
+          <h3>Plus de transparence</h3>
+          <p>Construisez un historique clair des opérations et des décisions du groupe.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="notice">
+      <strong>Version de démonstration :</strong>
+      ce site présente le projet LIKELEMBA.
+      Les comptes, les contributions et les paiements ne sont
+      pas encore actifs.
+    </div>
+  </main>
+
+  <footer>
+    © <span id="year"></span> LIKELEMBA — Tous droits réservés.
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+  </script>
+</body>
+  </html>
+  
