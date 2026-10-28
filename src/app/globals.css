@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Palette LIKELEMBA (reprise du prototype initial) */
+@theme {
+  --color-brand-50: #eef7f2;
+  --color-brand-100: #d4f0df;
+  --color-brand-200: #bde8d3;
+  --color-brand-600: #1a7d5e;
+  --color-brand-700: #146b50;
+  --color-brand-800: #11563f;
+  --color-brand-900: #103d31;
+  --color-cream: #f6f7f2;
+  --color-ink: #24352f;
+  --color-muted: #5b6b63;
+  --color-line: #e2e8e4;
+  --color-gold-100: #fbf0d4;
+  --color-gold-600: #a8740a;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+/* Focus clavier bien visible (accessibilité) */
+:focus-visible {
+  outline: 3px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
