@@ -18,13 +18,25 @@ et ne doit jamais recevoir vos mots de passe ou clés secrètes. Elles fonctionn
 2. **New project** → nom : `likelemba` → choisissez un mot de passe de base de données **fort**
    et rangez-le dans un gestionnaire de mots de passe (ne le donnez à personne, pas même à Claude).
 3. Région : la plus proche de vos utilisateurs parmi celles proposées.
+4. Laissez la **Data API** activée (l'application en a besoin) : elle n'expose que le schéma `public`,
+   protégé par RLS.
+
+> Utilisez un projet **neuf et vide**. Si le projet contient déjà des tables (par exemple une table
+> `profiles` créée pour un autre essai), les migrations s'arrêteront avec une erreur
+> « already exists » sans rien casser : prévenez Claude avant de continuer.
 
 ### A2. Appliquer les migrations (créer les tables et la sécurité)
-Méthode simple, sans rien installer :
-1. Dans Supabase : **SQL Editor** → **New query**.
-2. Ouvrez sur GitHub le fichier `supabase/migrations/20261028000100_core_schema.sql`, copiez tout son contenu,
-   collez-le, cliquez **Run**. Vous devez voir « Success ».
-3. Recommencez, **dans l'ordre**, avec `20261028000200_business_rules.sql` puis `20261028000300_rls_policies.sql`.
+Méthode simple, sans rien installer (fonctionne sur téléphone) :
+1. Dans Supabase : **SQL Editor** → **New query** (sur téléphone, le menu est derrière l'icône ☰).
+2. Dans un autre onglet du navigateur, ouvrez le fichier
+   `supabase/migrations/20261028000100_core_schema.sql` sur GitHub, puis le bouton **Raw**
+   (texte brut, plus facile à copier). Appui long → **Tout sélectionner** → **Copier**.
+3. Revenez dans Supabase, collez dans l'éditeur, appuyez sur **Run**. Vous devez voir « Success. No rows returned ».
+4. Recommencez **dans l'ordre**, avec une **nouvelle requête vide** à chaque fois, pour
+   `20261028000200_business_rules.sql` puis `20261028000300_rls_policies.sql`.
+
+En cas d'erreur, ne relancez pas le même fichier : copiez le message d'erreur (il ne contient aucun secret)
+et envoyez-le à Claude.
 
 Méthode avec la ligne de commande (ordinateur) :
 ```bash
@@ -32,6 +44,11 @@ npx supabase login
 npx supabase link --project-ref VOTRE_REF_PROJET   # la « ref » est dans l'URL du projet
 npx supabase db push                               # applique les migrations manquantes
 ```
+
+### A2 bis. Vérifier l'installation (lecture seule)
+Nouvelle requête dans **SQL Editor**, collez le contenu de `supabase/checks/verifier_installation.sql`
+(bouton **Raw** sur GitHub), puis **Run**. Ce script ne modifie rien.
+Toutes les lignes doivent afficher ✅ dans la colonne `ok`. Sinon, envoyez une capture du tableau à Claude.
 
 ### A3. Régler l'authentification
 Dans **Authentication → Sign In / Providers → Email** :

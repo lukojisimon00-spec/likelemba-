@@ -44,3 +44,11 @@ done
 echo "→ Tests des permissions et des règles métier"
 "${PSQL[@]}" -o /dev/null -f "$ROOT/supabase/tests/10_permissions_and_rules.sql" 2>&1 \
   | sed 's/^psql:[^ ]* NOTICE:  /  /'
+
+echo "→ Script de vérification de l'installation (supabase/checks)"
+CHECK_OUTPUT="$("${PSQL[@]}" -A -F ' | ' -P footer=off -f "$ROOT/supabase/checks/verifier_installation.sql")"
+echo "$CHECK_OUTPUT" | sed 's/^/  /'
+if echo "$CHECK_OUTPUT" | grep -q '❌'; then
+  echo "Le script de vérification signale un problème." >&2
+  exit 1
+fi
