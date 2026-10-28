@@ -1,0 +1,42 @@
+# Dépendances
+/node_modules
+/.pnp
+.pnp.*
+
+# Tests
+/coverage
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Production
+/build
+
+# Variables d'environnement : ne JAMAIS publier de vraies clés.
+# Seul .env.example (sans secret) est versionné.
+.env
+.env.*
+!.env.example
+
+# Vercel et Supabase (fichiers locaux)
+.vercel
+supabase/.branches
+supabase/.temp
+
+# Journaux et fichiers système
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+Thumbs.db
+*.pem
+
+# Éditeurs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
