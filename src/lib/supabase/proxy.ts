@@ -34,8 +34,15 @@ export async function updateSession(request: NextRequest) {
   });
 
   // getClaims() vérifie la signature du jeton : ne pas le remplacer par getSession().
-  const { data } = await supabase.auth.getClaims();
-  const isLoggedIn = Boolean(data?.claims?.sub);
+  // En cas de panne de Supabase ou du réseau, on considère l'utilisateur comme déconnecté
+  // plutôt que de faire planter toutes les pages.
+  let isLoggedIn = false;
+  try {
+    const { data } = await supabase.auth.getClaims();
+    isLoggedIn = Boolean(data?.claims?.sub);
+  } catch (error) {
+    console.error("Vérification de session impossible :", error);
+  }
 
   if (!isLoggedIn && isProtectedPath(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
