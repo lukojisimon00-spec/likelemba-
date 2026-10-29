@@ -33,6 +33,21 @@ trap cleanup EXIT
 
 PSQL=("${RUN_AS[@]}" psql -X -q -v ON_ERROR_STOP=1 -h "$WORK" -p "$PORT" -U postgres -d postgres)
 
+echo "→ Morceaux manuels de la migration 2 identiques à l'original"
+if ! diff -q <(for f in "$ROOT"/supabase/manual/migration2_partie*_sur5.sql; do tail -n +3 "$f"; done) \
+  "$ROOT/supabase/migrations/20261028000200_business_rules.sql" >/dev/null; then
+  echo "supabase/manual/ n'est plus synchronisé avec la migration 2 : régénérez les morceaux." >&2
+  exit 1
+fi
+
+echo "→ Empreintes du script d'installation à jour"
+for migration in "$ROOT"/supabase/migrations/*.sql; do
+  if ! grep -q "$(md5sum "$migration" | cut -c1-32)" "$ROOT/supabase/manual/installer_depuis_github.sql"; then
+    echo "supabase/manual/installer_depuis_github.sql : empreinte absente pour $(basename "$migration")." >&2
+    exit 1
+  fi
+done
+
 echo "→ Simulation de l'environnement Supabase"
 "${PSQL[@]}" -f "$ROOT/supabase/tests/00_supabase_stub.sql"
 
@@ -44,3 +59,11 @@ done
 echo "→ Tests des permissions et des règles métier"
 "${PSQL[@]}" -o /dev/null -f "$ROOT/supabase/tests/10_permissions_and_rules.sql" 2>&1 \
   | sed 's/^psql:[^ ]* NOTICE:  /  /'
+
+echo "→ Script de vérification de l'installation (supabase/checks)"
+CHECK_OUTPUT="$("${PSQL[@]}" -A -F ' | ' -P footer=off -f "$ROOT/supabase/checks/verifier_installation.sql")"
+echo "$CHECK_OUTPUT" | sed 's/^/  /'
+if echo "$CHECK_OUTPUT" | grep -q '❌'; then
+  echo "Le script de vérification signale un problème." >&2
+  exit 1
+fi

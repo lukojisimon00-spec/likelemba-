@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) return NextResponse.redirect(new URL(next, origin));
+      // Lien ouvert dans un autre navigateur que celui de l'inscription : Supabase a déjà
+      // vérifié l'adresse, seule la connexion automatique a échoué.
+      return NextResponse.redirect(new URL("/connexion?erreur=autre-navigateur", origin));
     } else if (tokenHash && type) {
       const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
       if (!error) return NextResponse.redirect(new URL(next, origin));

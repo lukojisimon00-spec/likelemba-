@@ -7,11 +7,24 @@
 export type SupabaseEnv = { url: string; key: string };
 
 export function getSupabaseEnv(): SupabaseEnv | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Espaces et retours à la ligne fréquents après un copier-coller sur téléphone.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = (
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )?.trim();
   if (!url || !key || key.includes("remplacez_moi")) return null;
-  return { url, key };
+  // Une adresse invalide ferait planter toutes les pages : on la traite comme absente.
+  if (!isHttpUrl(url) || /\s/.test(key)) return null;
+  return { url: url.replace(/\/+$/, ""), key };
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
 }
 
 export function isSupabaseConfigured(): boolean {
