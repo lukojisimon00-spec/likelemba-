@@ -60,7 +60,7 @@ Pourquoi ces choix :
 ## 4. Étapes suivantes (petites étapes)
 
 **Phase 3 — à finaliser par vous (5 à 15 min, voir README « Configurer Supabase »)**
-1. Créer le projet Supabase, appliquer les 3 migrations, puis lancer le script de vérification `supabase/checks/verifier_installation.sql` (tout doit être ✅). — *En cours : la connexion réelle n'est pas encore testée.*
+1. Créer le projet Supabase, appliquer les 3 migrations, puis lancer le script de vérification `supabase/checks/verifier_installation.sql` (tout doit être ✅). — ✅ *Fait le 29/10/2026 : migrations installées dans le projet Supabase, 19/19 contrôles ✅. Connexion réelle avec l'application pas encore testée.*
 2. Créer le projet Vercel, renseigner les variables d'environnement.
 3. Tester une vraie inscription (e-mail de confirmation) et une connexion.
 

@@ -45,6 +45,16 @@ npx supabase link --project-ref VOTRE_REF_PROJET   # la « ref » est dans l'URL
 npx supabase db push                               # applique les migrations manquantes
 ```
 
+### A2 (variante téléphone recommandée). Installer avec une seule commande
+Si copier un long fichier ne fonctionne pas sur votre téléphone, utilisez la commande courte
+`supabase/manual/installer_depuis_github.sql` (à copier depuis GitHub ou depuis Claude) :
+- elle active l'extension `http` de Supabase et télécharge les migrations depuis GitHub,
+  à une adresse figée sur un commit précis ;
+- elle vérifie l'empreinte (md5) de chaque fichier avant toute exécution ;
+- elle refuse de s'exécuter si le projet n'est pas vide : elle ne peut rien abîmer.
+
+C'est la méthode utilisée avec succès pour le premier projet (29 octobre 2026).
+
 ### A2 bis. Vérifier l'installation (lecture seule)
 Nouvelle requête dans **SQL Editor**, collez le contenu de `supabase/checks/verifier_installation.sql`
 (bouton **Raw** sur GitHub), puis **Run**. Ce script ne modifie rien.

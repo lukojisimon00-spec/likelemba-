@@ -40,6 +40,14 @@ if ! diff -q <(for f in "$ROOT"/supabase/manual/migration2_partie*_sur5.sql; do 
   exit 1
 fi
 
+echo "→ Empreintes du script d'installation à jour"
+for migration in "$ROOT"/supabase/migrations/*.sql; do
+  if ! grep -q "$(md5sum "$migration" | cut -c1-32)" "$ROOT/supabase/manual/installer_depuis_github.sql"; then
+    echo "supabase/manual/installer_depuis_github.sql : empreinte absente pour $(basename "$migration")." >&2
+    exit 1
+  fi
+done
+
 echo "→ Simulation de l'environnement Supabase"
 "${PSQL[@]}" -f "$ROOT/supabase/tests/00_supabase_stub.sql"
 
