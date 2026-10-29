@@ -21,6 +21,14 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
       <div className="flex flex-col gap-4">
         {!isSupabaseConfigured() && <ConfigMissing />}
         {params.deconnecte && <Alert tone="success">Vous êtes déconnecté. À bientôt !</Alert>}
+        {params.erreur === "autre-navigateur" && (
+          <Alert tone="info" title="Connectez-vous pour continuer">
+            Le lien a été ouvert dans un autre navigateur que celui de l&apos;inscription. Si c&apos;était
+            la confirmation de votre compte, votre adresse est confirmée : connectez-vous avec votre e-mail
+            et votre mot de passe. S&apos;il s&apos;agissait d&apos;un nouveau mot de passe, refaites la
+            demande depuis le même navigateur.
+          </Alert>
+        )}
         {params.erreur === "lien" && (
           <Alert tone="error">Ce lien est invalide ou a expiré. Reconnectez-vous ou demandez un nouveau lien.</Alert>
         )}

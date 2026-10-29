@@ -74,6 +74,12 @@ Dans **Authentication → URL Configuration** :
   - `https://*-VOTRE-COMPTE-VERCEL.vercel.app/**` (adresses de prévisualisation)
 
 ### A4. Modèles d'e-mails (important pour les téléphones)
+
+> ⚠️ Supabase n'autorise la modification des modèles qu'avec un **SMTP personnalisé**
+> (constaté le 29/10/2026). Sans SMTP, le modèle par défaut (en anglais) est utilisé :
+> le lien fonctionne s'il est ouvert dans le même navigateur que l'inscription. Ouvert ailleurs,
+> l'adresse est quand même confirmée et le site invite à se connecter.
+> Faites cette étape quand un SMTP sera configuré (obligatoire avant le lancement public).
 Pour que le lien fonctionne même s'il est ouvert sur un autre appareil que celui de l'inscription,
 dans **Authentication → Emails → Templates** :
 
