@@ -100,6 +100,16 @@ insert into public.groups (name, description, currency, contribution_amount, fre
 values ('  Mamans de Lemba  ', 'Groupe test', 'USD', 10, 'weekly', 5, 'Cotisation chaque lundi', 4);
 
 select tests.eq('nom du groupe nettoyé', (select name from public.groups), 'Mamans de Lemba');
+-- Non-régression : la page « Créer un groupe » relit l'identifiant (insert … returning).
+-- Le bloc lève volontairement « relu » pour annuler l'insertion après la relecture.
+select tests.throws('le créateur relit l''identifiant du groupe créé',
+  $q$do $d$
+    declare v_id uuid;
+    begin
+      insert into public.groups (name, currency, contribution_amount, frequency, max_members, organizer_commission)
+      values ('Groupe temporaire', 'USD', 5, 'weekly', 3, 1) returning id into v_id;
+      raise exception 'relu %', v_id;
+    end $d$$q$, 'relu');
 select tests.eq('le responsable est l''utilisateur connecté', (select owner_id from public.groups), :alice::uuid);
 select tests.eq('le responsable est membre « manager »',
   (select role::text from public.group_members where profile_id = :alice), 'manager');

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Alert, Card, SimulationBadge } from "@/components/ui";
+import { Alert, ButtonLink, Card, SimulationBadge } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { describeActivity } from "@/lib/data/activity";
 import { getDashboardData } from "@/lib/data/dashboard";
@@ -60,9 +60,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/tablea
             <Card className="border-dashed">
               <h2 className="text-lg font-bold text-brand-900">Vous n&apos;avez pas encore de groupe</h2>
               <p className="mt-2 text-muted">
-                La création de groupes, l&apos;ajout de membres et le suivi des cycles sont en cours de
-                développement et arriveront dans la prochaine version de LIKELEMBA.
+                Créez votre likelemba, fixez la cotisation et votre part de maman likelemba, puis ajoutez vos
+                membres. Le suivi des cycles arrivera dans la prochaine version.
               </p>
+              {!user.isSuspended && (
+                <ButtonLink href="/groupes/nouveau" className="mt-4">
+                  Créer un groupe
+                </ButtonLink>
+              )}
             </Card>
           )}
 

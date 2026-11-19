@@ -42,14 +42,14 @@ Pourquoi ces choix :
 
 | Priorité | Fonctionnalité | État |
 |---|---|---|
-| P0 | Schéma de base, RLS, règles métier, journal d'audit | ✅ Fait et testé (115 tests SQL) |
+| P0 | Schéma de base, RLS, règles métier, journal d'audit | ✅ Fait et testé (116 tests SQL) |
 | P0 | Modèle « maman likelemba » : part du responsable par tour, 1 USD LIKELEMBA par tour versé | ✅ Base + calculs faits et testés (migration du 19/11/2026) — interface en phase 4 |
-| P1 | Contacter un membre sur WhatsApp (lien wa.me pré-rempli) | 🟡 Fonction prête et testée — bouton à ajouter en phase 4 |
+| P1 | Contacter un membre sur WhatsApp (lien wa.me pré-rempli) | ✅ Bouton sur la page du groupe |
 | P0 | Inscription, connexion, déconnexion, mot de passe oublié, profil | ✅ Code fait — à vérifier avec un vrai projet Supabase |
 | P0 | Page d'accueil, mentions légales et confidentialité (modèles) | ✅ Fait |
 | P0 | Tableau de bord (indicateurs réels, vides tant qu'il n'y a pas de groupe) | ✅ Fait |
-| P1 | Création et modification de groupes (interface) | ⏳ Phase 4 — la base est prête |
-| P1 | Ajout, modification, retrait de membres (interface) | ⏳ Phase 4 |
+| P1 | Création, modification, archivage de groupes (interface) | ✅ Fait — testé dans un navigateur (360 et 320 px) sur une base locale |
+| P1 | Ajout et retrait de membres (interface) | ✅ Fait et testé — la modification d'un membre (nom, numéro, rôle) reste à faire |
 | P1 | Cycles : participants, ordre des tours, préparation, frais, démarrage | ⏳ Phase 4 |
 | P1 | Cotisations simulées, retards, reçus « SIMULATION » | ⏳ Phase 4 |
 | P1 | Versements simulés et clôture de cycle | ⏳ Phase 4 |
@@ -87,10 +87,8 @@ Points encore à confirmer par le propriétaire :
 
 **Phase 4 — fonctionnalités métier (prochaines sessions avec Claude Code)**
 1. Générer les types TypeScript de la base (`supabase gen types`).
-2. Pages « Mes groupes » : liste, création (devise, cotisation, **part du maman likelemba** avec aperçu
-   « bénéficiaire reçoit X, LIKELEMBA 1 USD »), modification, archivage.
-3. Page d'un groupe : membres (ajout, modification, retrait avec confirmation), bouton « Contacter sur
-   WhatsApp » (`whatsappLink`).
+2. ✅ Pages « Mes groupes » : liste, création avec aperçu du tour, modification, archivage (19/11/2026).
+3. ✅ Page d'un groupe : ajout et retrait de membres, bouton WhatsApp. Reste : modifier un membre.
 4. Cycle : choix des participants, ordre des tours (avec aperçu du calendrier et du montant net), préparation, démarrage.
 5. Suivi du cycle : échéances, cotisations attendues / reçues / en retard, enregistrement d'une cotisation simulée, reçu imprimable.
 6. Versements simulés (création automatique des frais 1 USD du tour), règlement simulé des frais, clôture.
@@ -101,6 +99,13 @@ Points encore à confirmer par le propriétaire :
 **Phase 6 — tests de bout en bout** (Playwright) sur les parcours principaux, mobile et ordinateur.
 
 **Phase 7 — déploiement de production** et vérification du site publié.
+
+### Vérification du 19/11/2026 (pages groupes)
+
+Test de bout en bout dans Chromium (28 vérifications), sur un PostgreSQL local avec toutes les migrations
+et PostgREST (le moteur d'API de Supabase). Seule la connexion était simulée : le vrai service de comptes
+Supabase n'a pas pu être lancé ici. **À refaire sur votre vrai projet Supabase** (phase 3).
+Bug trouvé et corrigé : la création d'un groupe était refusée par la base (migration `20261119000200`).
 
 ## 5. Risques identifiés
 

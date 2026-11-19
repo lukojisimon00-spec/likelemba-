@@ -18,8 +18,9 @@ export const FEATURES: Feature[] = [
   },
   {
     title: "Groupes et membres",
-    description: "Créez un groupe, fixez la devise (USD ou CDF), le montant, la fréquence et les règles.",
-    available: false,
+    description:
+      "Créez un groupe, fixez la devise (USD ou CDF), la cotisation, votre part de maman likelemba et les règles. Ajoutez vos membres et contactez-les sur WhatsApp.",
+    available: true,
   },
   {
     title: "Cycles et ordre des tours",

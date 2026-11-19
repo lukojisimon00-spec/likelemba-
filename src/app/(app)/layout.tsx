@@ -14,15 +14,18 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <Logo href="/tableau-de-bord" />
-          <nav aria-label="Navigation principale" className="flex items-center gap-1 text-sm font-semibold">
-            <Link href="/tableau-de-bord" className="rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50">
+          <nav aria-label="Navigation principale" className="flex flex-wrap items-center gap-x-1 text-sm font-semibold">
+            <Link href="/tableau-de-bord" className="inline-flex min-h-12 items-center rounded-lg px-2.5 text-brand-700 hover:bg-brand-50">
               Tableau de bord
             </Link>
-            <Link href="/profil" className="rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50">
+            <Link href="/groupes" className="inline-flex min-h-12 items-center rounded-lg px-2.5 text-brand-700 hover:bg-brand-50">
+              Mes groupes
+            </Link>
+            <Link href="/profil" className="inline-flex min-h-12 items-center rounded-lg px-2.5 text-brand-700 hover:bg-brand-50">
               Profil
             </Link>
             <form action={signOutAction}>
-              <button type="submit" className="rounded-lg px-3 py-2 text-muted hover:bg-cream">
+              <button type="submit" className="inline-flex min-h-12 items-center rounded-lg px-2.5 text-muted hover:bg-cream">
                 Déconnexion
               </button>
             </form>

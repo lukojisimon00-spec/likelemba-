@@ -103,3 +103,109 @@ export function SimulationBadge({ className = "" }: { className?: string }) {
     </span>
   );
 }
+
+const inputClass = (error?: string) =>
+  `min-h-12 w-full rounded-xl border bg-white px-4 text-base text-ink placeholder:text-muted/70 ${
+    error ? "border-red-600" : "border-line"
+  } focus:border-brand-600`;
+
+function FieldShell({
+  id,
+  label,
+  hint,
+  error,
+  className = "",
+  children,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  error?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      <label htmlFor={id} className="text-sm font-semibold text-ink">
+        {label}
+      </label>
+      {children}
+      {hint && !error && (
+        <p id={`${id}-aide`} className="text-sm text-muted">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-erreur`} className="text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function describedBy(id: string, hint?: string, error?: string) {
+  return [hint && `${id}-aide`, error && `${id}-erreur`].filter(Boolean).join(" ") || undefined;
+}
+
+/** Liste déroulante avec libellé, aide et message d'erreur. */
+export function SelectField({
+  label,
+  name,
+  hint,
+  error,
+  options,
+  className = "",
+  ...select
+}: ComponentProps<"select"> & {
+  label: string;
+  name: string;
+  hint?: string;
+  error?: string;
+  options: { value: string; label: string }[];
+}) {
+  const id = select.id ?? `champ-${name}`;
+  return (
+    <FieldShell id={id} label={label} hint={hint} error={error} className={className}>
+      <select
+        id={id}
+        name={name}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        className={inputClass(error)}
+        {...select}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </FieldShell>
+  );
+}
+
+/** Zone de texte sur plusieurs lignes. */
+export function TextAreaField({
+  label,
+  name,
+  hint,
+  error,
+  className = "",
+  ...textarea
+}: ComponentProps<"textarea"> & { label: string; name: string; hint?: string; error?: string }) {
+  const id = textarea.id ?? `champ-${name}`;
+  return (
+    <FieldShell id={id} label={label} hint={hint} error={error} className={className}>
+      <textarea
+        id={id}
+        name={name}
+        rows={3}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        className={`${inputClass(error)} py-3`}
+        {...textarea}
+      />
+    </FieldShell>
+  );
+}
