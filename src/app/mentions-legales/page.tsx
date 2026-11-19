@@ -32,8 +32,8 @@ export default function LegalNoticePage() {
       <section>
         <h2>Tarif</h2>
         <p>
-          Des frais de service de 1 USD par groupe et par cycle sont prévus. Pendant la phase de test, ces frais
-          sont simulés et aucun paiement n&apos;est demandé.
+          Des frais de service de 1 USD par tour versé sont prévus, pris sur la part du responsable du groupe
+          (maman likelemba). Pendant la phase de test, ces frais sont simulés et aucun paiement n&apos;est demandé.
         </p>
       </section>
       <section>

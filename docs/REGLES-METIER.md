@@ -11,7 +11,7 @@ par une nouvelle migration.
 
 | Rôle | Qui | Peut |
 |---|---|---|
-| Responsable (`manager`) | Créateur du groupe (un seul) | Tout gérer : groupe, membres, cycles, frais, cotisations, versements, archivage |
+| Responsable (`manager`), appelé « maman likelemba » | Créateur du groupe (un seul) | Tout gérer : groupe, membres, cycles, frais, cotisations, versements, archivage |
 | Trésorier (`treasurer`) | Désigné par le responsable | Enregistrer cotisations et versements simulés ; voir les coordonnées de réception |
 | Membre (`member`) | Membre ayant rattaché son compte | Consulter son groupe, les membres, le calendrier, les cotisations |
 | Membre sans compte | Ajouté par le responsable (nom + téléphone) | Rien en ligne ; il est géré par le responsable |
@@ -21,7 +21,9 @@ par une nouvelle migration.
 
 - Devise `USD` ou `CDF`, figée dès que le groupe a un cycle.
 - Montant de cotisation > 0, fréquence : chaque semaine, toutes les deux semaines ou chaque mois.
-- Nombre maximal de membres : entre 2 et 100.
+- Nombre maximal de membres : entre 2 et 500.
+- **Part du maman likelemba** (`organizer_commission`) : montant fixe gardé par le responsable à chaque tour,
+  dans la devise du groupe. Copiée dans le cycle à sa création, puis figée.
 - Le responsable ne peut pas être changé ni retiré (transfert prévu plus tard).
 - Archivage possible seulement sans cycle ouvert ; un groupe archivé n'est plus modifiable.
 - Pas de suppression : l'historique est conservé.
@@ -42,20 +44,22 @@ par une nouvelle migration.
 |---|---|
 | Création | Copie la devise, le montant et la fréquence du groupe. Un seul cycle ouvert par groupe. Numérotation automatique. |
 | Brouillon | Choix des participants (membres actifs) et de l'ordre des bénéficiaires. Chaque modification est journalisée. |
-| Passage en préparation | Au moins 2 participants ; ordre complet de 1 à n sans trou. Crée les frais LIKELEMBA (1 USD, statut « à régler »). Participants verrouillés. |
-| Retour en brouillon | Possible tant que les frais ne sont pas réglés. |
-| Démarrage | Frais réglés (ou offerts). Génère le calendrier : un tour par participant, et un versement prévu par tour. |
+| Passage en préparation | Au moins 2 participants ; ordre complet de 1 à n sans trou. Part du maman likelemba > 0, inférieure à la cagnotte et, en USD, d'au moins 1 USD. Participants verrouillés. |
+| Retour en brouillon | Toujours possible depuis « en préparation ». |
+| Démarrage | Génère le calendrier : un tour par participant, et un versement prévu par tour. |
 | Fin | Tous les versements effectués. |
-| Annulation | Motif obligatoire (≥ 5 caractères). Les versements et frais en attente sont annulés ; les opérations déjà faites sont conservées. |
+| Annulation | Motif obligatoire (≥ 5 caractères). Les versements en attente sont annulés ; les opérations déjà faites et les frais des tours déjà versés sont conservés. |
 
 ### Calendrier et montants
 
 - Tour 1 = date de début ; tour suivant = + 7 jours, + 14 jours ou + 1 mois.
   En mensuel, une date au 31 passe au dernier jour des mois plus courts (31 janvier → 28 février).
 - À chaque tour, **chaque participant verse la cotisation, bénéficiaire compris**.
-- Le bénéficiaire du tour reçoit : `cotisation × nombre de participants`.
-  Exemple : 4 participants à 10 USD → 40 USD par tour.
-- Les frais LIKELEMBA ne sont **jamais** retirés de ce montant.
+- Cagnotte du tour : `cotisation × nombre de participants`.
+- Le maman likelemba garde sa part ; le bénéficiaire reçoit : `cagnotte − part du maman likelemba`.
+- Exemple : 10 participants à 10 USD, part de 10 USD → cagnotte 100 USD, bénéficiaire **90 USD**,
+  maman likelemba **10 USD** (dont 1 USD pour LIKELEMBA : il lui reste 9 USD).
+- Les frais LIKELEMBA ne sont **jamais** retirés de la somme du bénéficiaire.
 
 ## Cotisations (simulées)
 
@@ -75,8 +79,13 @@ par une nouvelle migration.
 
 ## Frais LIKELEMBA
 
-- 1 USD par groupe et par cycle (paramètre `service_fee_amount_usd`).
+- **1 USD par tour versé** (paramètre `service_fee_amount_usd`), décision du propriétaire du 19/11/2026.
+- Créés automatiquement (statut « à régler ») au moment où le versement du tour est effectué :
+  pas de versement, pas de frais. Pris sur la part du maman likelemba.
+- Un tour versé une seule fois = des frais créés une seule fois.
 - Toujours en USD, même pour un groupe en CDF ; aucune conversion automatique.
+  (Dans un groupe en CDF, la part du maman likelemba est en CDF et le maman likelemba doit 1 USD par tour.)
+- Les anciennes lignes de frais « par cycle » (avant la migration du 19/11/2026) sont conservées telles quelles.
 - Visibles du responsable et de l'administrateur seulement.
 
 ## Destination des fonds (préférences)

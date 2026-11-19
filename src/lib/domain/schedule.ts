@@ -4,12 +4,15 @@
  * Règle retenue pour le MVP (voir docs/REGLES-METIER.md) :
  * - Un cycle compte autant de tours que de participants.
  * - À chaque tour, chaque participant (bénéficiaire compris) verse la cotisation.
- * - Le bénéficiaire du tour reçoit : cotisation × nombre de participants.
- * - Les frais LIKELEMBA ne sont jamais déduits de ce montant.
+ * - Cagnotte du tour : cotisation × nombre de participants.
+ * - Le bénéficiaire reçoit : cagnotte − part du maman likelemba (voir fees.ts).
+ * - Les frais LIKELEMBA (1 USD) sont pris sur la part du maman likelemba,
+ *   jamais sur la somme du bénéficiaire.
  *
  * Doit rester identique à la fonction SQL private.round_due_date().
  */
-import { multiplyMoney, type Money } from "./money";
+import { computeTurnBreakdown } from "./fees";
+import { type Money } from "./money";
 
 export const FREQUENCIES = ["weekly", "biweekly", "monthly"] as const;
 export type Frequency = (typeof FREQUENCIES)[number];
@@ -62,6 +65,9 @@ export type ScheduleRound = {
   dueDate: IsoDate;
   /** Position dans l'ordre des bénéficiaires (= numéro du tour). */
   beneficiaryPosition: number;
+  /** Cagnotte du tour (cotisation × participants). */
+  pot: Money;
+  /** Somme remise au bénéficiaire (cagnotte − part du maman likelemba). */
   payout: Money;
 };
 
@@ -71,20 +77,16 @@ export function buildSchedule(params: {
   frequency: Frequency;
   participants: number;
   contribution: Money;
+  organizerCommission: Money;
 }): ScheduleRound[] {
-  const { start, frequency, participants, contribution } = params;
-  if (!Number.isInteger(participants) || participants < 2) {
-    throw new Error("Un cycle doit compter au moins 2 participants.");
-  }
-  if (contribution.minor <= 0) {
-    throw new Error("La cotisation doit être supérieure à zéro.");
-  }
-  const payout = multiplyMoney(contribution, participants);
+  const { start, frequency, participants, contribution, organizerCommission } = params;
+  const { pot, beneficiaryAmount } = computeTurnBreakdown({ contribution, participants, organizerCommission });
   return Array.from({ length: participants }, (_, i) => ({
     round: i + 1,
     dueDate: computeDueDate(start, frequency, i + 1),
     beneficiaryPosition: i + 1,
-    payout,
+    pot,
+    payout: beneficiaryAmount,
   }));
 }
 

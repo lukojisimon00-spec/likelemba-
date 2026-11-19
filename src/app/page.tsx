@@ -14,7 +14,7 @@ const STEPS = [
 const FAQ = [
   {
     q: "Qu'est-ce qu'un likelemba ?",
-    a: "C'est une épargne collective : chaque membre verse la même somme à intervalle régulier, et à chaque tour un membre reçoit la totalité des cotisations, jusqu'à ce que tout le monde ait reçu son tour.",
+    a: "C'est une épargne collective : chaque membre verse la même somme à intervalle régulier, et à chaque tour un membre reçoit la cagnotte, jusqu'à ce que tout le monde ait reçu son tour. Le maman likelemba, qui organise le groupe, garde une petite part fixée à l'avance.",
   },
   {
     q: "LIKELEMBA garde-t-il mon argent ?",
@@ -22,7 +22,7 @@ const FAQ = [
   },
   {
     q: "Combien ça coûte ?",
-    a: "Le service prévoit des frais de 1 USD par groupe et par cycle, payés par le groupe à l'ouverture du cycle. Ces frais ne sont jamais retirés des sommes destinées aux membres. Pendant la phase de test, les frais sont simulés.",
+    a: "LIKELEMBA prend 1 USD par tour, uniquement quand un membre reçoit la cagnotte. Ce dollar est pris sur la part du maman likelemba, jamais sur la somme du bénéficiaire. Exemple : 10 membres à 10 USD = 100 USD ; le bénéficiaire reçoit 90 USD, le maman likelemba garde 10 USD dont 1 USD pour LIKELEMBA. Pendant la phase de test, les frais sont simulés.",
   },
   {
     q: "Puis-je utiliser des francs congolais ?",
@@ -149,11 +149,12 @@ export default function HomePage() {
         <section className="pb-12" aria-labelledby="tarif">
           <Card className="border-brand-200 bg-brand-50">
             <h2 id="tarif" className="text-2xl font-bold text-brand-900">
-              Un tarif simple : 1 USD par groupe et par cycle
+              Un tarif simple : 1 USD par tour
             </h2>
             <p className="mt-2 text-ink">
-              Les frais sont payés par le groupe à l&apos;ouverture de chaque nouveau cycle. Ils ne sont jamais
-              retirés de l&apos;argent destiné aux membres. Pendant la phase de test, ils sont simulés.
+              LIKELEMBA prend 1 USD seulement quand un membre reçoit la cagnotte, sur la part du maman
+              likelemba. Le bénéficiaire reçoit toujours la somme annoncée. Pendant la phase de test, les frais
+              sont simulés.
             </p>
           </Card>
         </section>

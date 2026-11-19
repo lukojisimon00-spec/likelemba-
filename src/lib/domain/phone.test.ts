@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDrcPhone, isValidDrcPhone, normalizeDrcPhone } from "./phone";
+import { formatDrcPhone, isValidDrcPhone, normalizeDrcPhone, whatsappLink } from "./phone";
 
 describe("normalizeDrcPhone", () => {
   it.each([
@@ -25,5 +25,21 @@ describe("normalizeDrcPhone", () => {
 describe("formatDrcPhone", () => {
   it("affiche le numéro de façon lisible", () => {
     expect(formatDrcPhone("+243812345678")).toBe("+243 81 234 5678");
+  });
+});
+
+describe("whatsappLink", () => {
+  it("construit un lien wa.me sans le +", () => {
+    expect(whatsappLink("0812345678")).toBe("https://wa.me/243812345678");
+  });
+
+  it("encode le message", () => {
+    expect(whatsappLink("+243 81 234 5678", "Bonjour, rejoins notre likelemba !")).toBe(
+      "https://wa.me/243812345678?text=Bonjour%2C%20rejoins%20notre%20likelemba%20!",
+    );
+  });
+
+  it("refuse un numéro invalide", () => {
+    expect(whatsappLink("+33612345678")).toBeNull();
   });
 });

@@ -31,10 +31,12 @@ describe("buildSchedule", () => {
       frequency: "weekly",
       participants: 4,
       contribution: money("10", "USD"),
+      organizerCommission: money("4", "USD"),
     });
     expect(rounds).toHaveLength(4);
     expect(rounds.map((r) => r.dueDate)).toEqual(["2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23"]);
-    expect(rounds[0].payout).toEqual({ minor: 4000, currency: "USD" });
+    expect(rounds[0].pot).toEqual({ minor: 4000, currency: "USD" });
+    expect(rounds[0].payout).toEqual({ minor: 3600, currency: "USD" });
     expect(plannedEndDate("2026-11-02", "weekly", 4)).toBe("2026-11-23");
   });
 
@@ -44,12 +46,18 @@ describe("buildSchedule", () => {
       frequency: "monthly",
       participants: 2,
       contribution: money("25000", "CDF"),
+      organizerCommission: money("5000", "CDF"),
     });
-    expect(first.payout).toEqual({ minor: 5_000_000, currency: "CDF" });
+    expect(first.payout).toEqual({ minor: 4_500_000, currency: "CDF" });
   });
 
   it("refuse les cycles incohérents", () => {
-    const base = { start: "2026-11-02", frequency: "weekly" as const, contribution: money("10", "USD") };
+    const base = {
+      start: "2026-11-02",
+      frequency: "weekly" as const,
+      contribution: money("10", "USD"),
+      organizerCommission: money("2", "USD"),
+    };
     expect(() => buildSchedule({ ...base, participants: 1 })).toThrow();
     expect(() => buildSchedule({ ...base, participants: 3, contribution: money("0", "USD") })).toThrow();
   });

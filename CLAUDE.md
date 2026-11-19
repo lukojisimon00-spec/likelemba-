@@ -40,8 +40,9 @@ npm run build      # build de production (doit passer avant tout déploiement)
 2. Deux devises : `USD` et `CDF`. **Ne jamais mélanger** deux devises dans un calcul
    (`addMoney` lève une erreur). Chaque groupe, cycle et opération enregistre sa devise.
 3. Calculs en centimes entiers (`src/lib/domain/money.ts`), jamais en nombres flottants.
-4. Frais LIKELEMBA : 1 USD par groupe et par cycle, toujours en USD, **jamais déduits** des
-   sommes des membres, **jamais convertis** en CDF sans taux explicite enregistré.
+4. Frais LIKELEMBA : **1 USD par tour versé** (décision du propriétaire, 19/11/2026), pris sur la
+   **part du maman likelemba** (responsable), **jamais** sur la somme du bénéficiaire. Toujours en USD,
+   **jamais convertis** en CDF sans taux explicite enregistré. Bénéficiaire = cagnotte − part du maman likelemba.
 5. Tout reçu ou écran de paiement simulé affiche « SIMULATION — AUCUN ARGENT RÉEL ».
 6. Ne jamais collecter de code PIN, mot de passe bancaire ou code OTP.
 7. Ne jamais présenter LIKELEMBA comme un établissement financier agréé.

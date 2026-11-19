@@ -96,8 +96,8 @@ select tests.throws('owner_id ne peut pas être fourni par le navigateur',
            values (%L, 'Pirate', 'USD', 10, 'weekly', 5)$q$, :bob),
   'permission denied');
 
-insert into public.groups (name, description, currency, contribution_amount, frequency, max_members, rules)
-values ('  Mamans de Lemba  ', 'Groupe test', 'USD', 10, 'weekly', 5, 'Cotisation chaque lundi');
+insert into public.groups (name, description, currency, contribution_amount, frequency, max_members, rules, organizer_commission)
+values ('  Mamans de Lemba  ', 'Groupe test', 'USD', 10, 'weekly', 5, 'Cotisation chaque lundi', 4);
 
 select tests.eq('nom du groupe nettoyé', (select name from public.groups), 'Mamans de Lemba');
 select tests.eq('le responsable est l''utilisateur connecté', (select owner_id from public.groups), :alice::uuid);
@@ -107,6 +107,12 @@ select tests.eq('le responsable est membre « manager »',
 select tests.throws('montant négatif refusé',
   $q$insert into public.groups (name, currency, contribution_amount, frequency, max_members)
      values ('Test', 'USD', -5, 'weekly', 5)$q$, 'check constraint');
+select tests.throws('part du maman likelemba négative refusée',
+  $q$insert into public.groups (name, currency, contribution_amount, frequency, max_members, organizer_commission)
+     values ('Test', 'USD', 5, 'weekly', 5, -1)$q$, 'check constraint');
+select tests.throws('au plus 500 membres par groupe',
+  $q$insert into public.groups (name, currency, contribution_amount, frequency, max_members)
+     values ('Test', 'USD', 5, 'weekly', 501)$q$, 'max_members');
 select tests.throws('devise inconnue refusée',
   $q$insert into public.groups (name, currency, contribution_amount, frequency, max_members)
      values ('Test', 'EUR', 5, 'weekly', 5)$q$, 'invalid input value');
@@ -225,31 +231,52 @@ update public.cycle_participants set payout_position = 4 where payout_position =
 
 select tests.throws('démarrage impossible sans préparation',
   format('select public.start_cycle(%L)', :'cycle1'), 'en préparation');
+select tests.eq('part du maman likelemba copiée du groupe', (select organizer_commission from public.cycles), 4.00::numeric);
+select tests.throws('le navigateur ne modifie pas la part du cycle',
+  $q$update public.cycles set organizer_commission = 0$q$, 'permission denied');
+
+-- Contrôles de la part du maman likelemba (valeurs forcées côté serveur pour le test)
+reset role;
+update public.cycles set organizer_commission = 0;
+set role authenticated;
+select tests.throws('part du maman likelemba obligatoire',
+  format('select public.prepare_cycle(%L)', :'cycle1'), 'part du maman likelemba');
+reset role;
+update public.cycles set organizer_commission = 0.50;
+set role authenticated;
+select tests.throws('en USD, la part couvre au moins les frais de 1 USD',
+  format('select public.prepare_cycle(%L)', :'cycle1'), 'au moins 1');
+reset role;
+update public.cycles set organizer_commission = 40;
+set role authenticated;
+select tests.throws('la part est inférieure à la cagnotte (4 x 10 USD)',
+  format('select public.prepare_cycle(%L)', :'cycle1'), 'inférieure à la cagnotte');
+reset role;
+update public.cycles set organizer_commission = 4;
+set role authenticated;
+
 select public.prepare_cycle(:'cycle1');
 select tests.eq('cycle en préparation', (select status::text from public.cycles), 'preparing');
 select tests.eq('date de fin prévue calculée', (select planned_end_date from public.cycles), date '2026-11-23');
-select tests.eq('frais de 1 USD dus', (select amount || ' ' || currency || ' ' || status from public.service_fees), '1.00 USD due');
+select tests.eq('aucun frais créé à la préparation', (select count(*) from public.service_fees), 0::bigint);
 
 select tests.throws('participants verrouillés en préparation',
   $q$update public.cycle_participants set payout_position = payout_position$q$, 'brouillon');
-select tests.throws('démarrage impossible sans frais réglés',
-  format('select public.start_cycle(%L)', :'cycle1'), 'frais');
-
-select public.pay_service_fee_simulated(:'cycle1');
-select public.pay_service_fee_simulated(:'cycle1');
-select tests.eq('frais réglés une seule fois',
-  (select count(*) from public.audit_logs where entity_type = 'service_fees' and action = 'update' and details ? 'status'), 1::bigint);
-select tests.throws('retour en brouillon impossible après règlement des frais',
-  format('select public.return_cycle_to_draft(%L)', :'cycle1'), 'déjà réglés');
+select public.return_cycle_to_draft(:'cycle1');
+select tests.eq('retour en brouillon possible', (select status::text from public.cycles), 'draft');
+select public.prepare_cycle(:'cycle1');
 
 select public.start_cycle(:'cycle1');
 select tests.eq('cycle actif', (select status::text from public.cycles), 'active');
 select tests.eq('4 échéances créées', (select count(*) from public.contribution_schedules), 4::bigint);
 select tests.eq('échéance du tour 2',
   (select due_date from public.contribution_schedules where round_number = 2), date '2026-11-09');
-select tests.eq('montant du tour = 4 x 10 USD', (select distinct amount from public.payout_orders), 40.00::numeric);
-select tests.eq('les frais ne sont pas déduits des versements',
-  (select sum(amount) from public.payout_orders), 160.00::numeric);
+select tests.eq('cagnotte du tour = 4 x 10 USD', (select distinct gross_amount from public.payout_orders), 40.00::numeric);
+select tests.eq('part du maman likelemba = 4 USD', (select distinct organizer_commission from public.payout_orders), 4.00::numeric);
+select tests.eq('le bénéficiaire reçoit 40 - 4 = 36 USD', (select distinct amount from public.payout_orders), 36.00::numeric);
+select tests.eq('les frais LIKELEMBA ne sont pas retirés du bénéficiaire',
+  (select sum(amount) from public.payout_orders), 144.00::numeric);
+select tests.eq('aucun frais avant le premier versement', (select count(*) from public.service_fees), 0::bigint);
 select tests.throws('participants verrouillés après démarrage',
   $q$delete from public.cycle_participants$q$, 'brouillon');
 select tests.throws('écriture directe de cotisation interdite',
@@ -302,6 +329,16 @@ select public.mark_payout_paid_simulated(:'payout1');
 select public.mark_payout_paid_simulated(:'payout1');
 select tests.eq('versement effectué une seule fois',
   (select count(*) from public.audit_logs where entity_type = 'payout_orders' and action = 'update' and details ? 'status'), 1::bigint);
+select tests.eq('1 USD de frais LIKELEMBA dus pour ce tour, une seule fois',
+  (select string_agg(amount || ' ' || currency || ' ' || status, ',') from public.service_fees where payout_id = :'payout1'),
+  '1.00 USD due');
+select tests.eq('aucun frais pour un tour non versé',
+  (select count(*) from public.service_fees where payout_id = :'payout2'), 0::bigint);
+select id as fee1 from public.service_fees where payout_id = :'payout1' \gset
+select public.pay_service_fee_simulated(:'fee1');
+select public.pay_service_fee_simulated(:'fee1');
+select tests.eq('frais réglés une seule fois',
+  (select count(*) from public.audit_logs where entity_type = 'service_fees' and action = 'update' and details ? 'status'), 1::bigint);
 select tests.throws('fin du cycle impossible avant tous les versements',
   format('select public.complete_cycle(%L)', :'cycle1'), 'Tous les bénéficiaires');
 select tests.throws('retrait impossible d''un membre en cycle actif',
@@ -319,6 +356,8 @@ select tests.eq('Carol ne voit pas les frais du groupe', (select count(*) from p
 select tests.throws('Carol ne peut pas enregistrer de cotisation',
   format($q$select public.record_simulated_contribution(%L, %L, 'carol-key-0001')$q$, :'round2', :'p_carol'),
   'accès refusé');
+select tests.throws('Carol ne peut pas régler les frais',
+  format('select public.pay_service_fee_simulated(%L)', :'fee1'), 'accès refusé');
 select tests.throws('Carol ne peut pas annuler le cycle',
   format($q$select public.cancel_cycle(%L, 'je veux annuler')$q$, :'cycle1'), 'accès refusé');
 reset role;
@@ -348,6 +387,8 @@ select tests.eq('versements en attente annulés',
   (select count(*) from public.payout_orders where status = 'cancelled'), 3::bigint);
 select tests.eq('versement déjà effectué conservé',
   (select count(*) from public.payout_orders where status = 'paid'), 1::bigint);
+select tests.eq('les frais du tour versé sont conservés',
+  (select status::text from public.service_fees where id = :'fee1'), 'paid');
 select tests.throws('un cycle annulé ne se modifie plus',
   format($q$update public.cycles set start_date = '2026-12-01' where id = %L$q$, :'cycle1'), 'brouillon');
 select tests.eq('Alice voit le journal de son groupe', (select count(*) from public.audit_logs) > 10, true);
@@ -374,8 +415,8 @@ reset role;
 -- -----------------------------------------------------------------------------
 select set_config('request.jwt.claims', json_build_object('sub', :fay)::text, false);
 set role authenticated;
-insert into public.groups (name, currency, contribution_amount, frequency, max_members)
-values ('Groupe Matete', 'CDF', 25000, 'monthly', 3);
+insert into public.groups (name, currency, contribution_amount, frequency, max_members, organizer_commission)
+values ('Groupe Matete', 'CDF', 25000, 'monthly', 3, 5000);
 select id as fay_group from public.groups \gset
 insert into public.group_members (group_id, full_name) values (:'fay_group', 'Membre CDF');
 insert into public.cycles (group_id, start_date) values (:'fay_group', '2026-01-31');
@@ -383,12 +424,18 @@ select id as fay_cycle from public.cycles \gset
 insert into public.cycle_participants (cycle_id, member_id, payout_position)
 select :'fay_cycle', id, row_number() over (order by role) from public.group_members;
 select public.prepare_cycle(:'fay_cycle');
-select tests.eq('frais en USD même pour un groupe en CDF',
-  (select currency::text || ' ' || amount from public.service_fees), 'USD 1.00');
-select public.pay_service_fee_simulated(:'fay_cycle');
 select public.start_cycle(:'fay_cycle');
-select tests.eq('versement en CDF',
-  (select distinct currency::text || ' ' || amount from public.payout_orders), 'CDF 50000.00');
+select tests.eq('versement en CDF = 2 x 25 000 - 5 000',
+  (select distinct currency::text || ' ' || amount from public.payout_orders), 'CDF 45000.00');
+select tests.eq('part du maman likelemba en CDF',
+  (select distinct currency::text || ' ' || organizer_commission from public.payout_orders), 'CDF 5000.00');
+select public.record_simulated_contribution(s.id, p.id, 'fay-r1-' || p.payout_position || '-key')
+from public.contribution_schedules s join public.cycle_participants p on p.cycle_id = s.cycle_id
+where s.round_number = 1;
+select public.mark_payout_paid_simulated(id) from public.payout_orders
+where schedule_id = (select id from public.contribution_schedules where round_number = 1);
+select tests.eq('frais du tour en USD même pour un groupe en CDF (aucune conversion)',
+  (select currency::text || ' ' || amount from public.service_fees), 'USD 1.00');
 select tests.eq('échéance mensuelle en fin de mois',
   (select due_date from public.contribution_schedules where round_number = 2), date '2026-02-28');
 select tests.throws('devise du groupe figée après un cycle',

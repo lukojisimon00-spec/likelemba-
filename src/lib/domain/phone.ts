@@ -36,3 +36,17 @@ export function formatDrcPhone(e164: string): string {
   const n = e164.slice(4);
   return `+243 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}`;
 }
+
+/**
+ * Lien « Cliquer pour discuter » de WhatsApp (format officiel https://wa.me/<numéro>).
+ * Ouvre WhatsApp sur le téléphone avec le message pré-rempli ; rien n'est envoyé
+ * automatiquement et LIKELEMBA ne passe par aucune API WhatsApp.
+ * Renvoie null si le numéro n'est pas un mobile RDC valide.
+ */
+export function whatsappLink(phone: string, message?: string): string | null {
+  const e164 = normalizeDrcPhone(phone);
+  if (!e164) return null;
+  const base = `https://wa.me/${e164.slice(1)}`;
+  const text = message?.trim();
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
+}
