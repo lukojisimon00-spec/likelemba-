@@ -49,7 +49,7 @@ un PostgreSQL local avec toutes les migrations et PostgREST (le moteur d'API de 
 | Après une erreur de saisie, les **listes déroulantes** des anciens formulaires (fréquence d'un groupe, rôle d'un membre) peuvent revenir à leur valeur par défaut (comportement de React 19). Corrigé dans le nouveau formulaire de correction. | Faible | Appliquer la même correction aux anciens formulaires (avec votre accord, car cela modifie l'existant). |
 | Un cycle **en brouillon** garde la cotisation et la part du maman likelemba du moment de sa création, même si le groupe est modifié ensuite. | Faible | Recopier les montants du groupe au moment de démarrer le cycle. |
 | La liste « Dernières activités » du tableau de bord reste générique (« Cotisation : ajouté »). | Faible | Réutiliser les phrases de l'historique. |
-| `docs/PLAN.md` et l'accueil parlaient de « 1 USD par groupe et par cycle » avant la décision du 19/11 ; c'est corrigé. Votre texte de mission reprend encore l'ancien modèle. | Info | Le modèle en place reste **1 USD par tour versé, pris sur la part du maman likelemba** (votre décision du 19/11). |
+| Modèle de frais : « 1 USD par groupe et par cycle » est **abandonné** (confirmé par le propriétaire le 19/11/2026). | Info | Seul modèle : **1 USD par tour versé, pris sur la part du maman likelemba**. Plus aucune mention de l'ancien modèle dans le site ; les anciennes migrations restent intactes (historique). |
 
 ## C. Présent dans l'interface mais non fonctionnel
 

@@ -68,6 +68,7 @@ Pourquoi ces choix :
 - Le bénéficiaire reçoit la cagnotte moins cette part. Exemple : 10 × 10 USD = 100 USD → 90 USD au
   bénéficiaire, 10 USD au maman likelemba.
 - LIKELEMBA prend **1 USD par tour versé**, sur la part du maman likelemba (il lui reste 9 USD).
+- Le modèle « 1 USD par groupe et par cycle » est **abandonné** (confirmé le 19/11/2026).
 - Les cotisations doivent arriver sur **un seul compte** : celui du maman likelemba (Mobile Money ou
   banque). LIKELEMBA ne garde jamais l'argent.
 - Pour l'instant tout reste **simulé** (règle n° 1). Le circuit réel (encaissement sur le compte du
