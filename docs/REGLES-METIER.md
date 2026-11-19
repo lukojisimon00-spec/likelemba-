@@ -73,6 +73,14 @@ par une nouvelle migration.
 - Chaque utilisateur ne voit **que** les groupes qu'il a créés ou dont il est membre rattaché, et leurs membres.
 - Les frais LIKELEMBA ne sont visibles que du maman likelemba (et de l'administrateur de la plateforme).
 
+## Invitations
+
+- Le maman likelemba crée un **lien personnel** pour un membre déjà ajouté et sans compte.
+- Lien à usage unique, valable 14 jours ; créer un nouveau lien annule le précédent ; annulation possible.
+- La personne ouvre le lien, se connecte ou crée son compte, puis « Rejoindre le groupe » : sa fiche est rattachée
+  à son compte et elle voit ce groupe (et seulement lui).
+- Seule l'empreinte du jeton est stockée en base.
+
 ## Cotisations (simulées)
 
 - Montant et devise repris de l'échéance : le navigateur ne peut pas les choisir.
@@ -81,6 +89,9 @@ par une nouvelle migration.
   connexion coupée) renvoie la même opération au lieu d'en créer une seconde.
 - Reçu numéroté `SIM-AAAAMMJJ-XXXXXXXX`, toujours marqué « SIMULATION — AUCUN ARGENT RÉEL ».
 - Un échec simulé peut être enregistré pour tester l'affichage ; une nouvelle tentative est alors possible.
+- **Correction** d'une cotisation enregistrée par erreur : annulation avec motif obligatoire (≥ 5 caractères),
+  par le responsable ou le trésorier, seulement tant que la cagnotte du tour n'a pas été versée. Rien n'est effacé :
+  la cotisation passe à « annulée » avec son motif et l'historique garde l'ancienne valeur.
 - Une échéance est **en retard** si sa date est passée sans cotisation confirmée
   (date du jour calculée à l'heure de Kinshasa).
 

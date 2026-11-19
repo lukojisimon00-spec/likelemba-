@@ -9,12 +9,14 @@ import { formatDate, formatDateTime, todayIso } from "@/lib/dates";
 import { CYCLE_STATUS_LABELS } from "@/lib/domain/cycle";
 import { FEE_STATUS_LABELS, serviceFeesForTurns } from "@/lib/domain/fees";
 import { formatMoney } from "@/lib/domain/money";
+import { whatsappLink } from "@/lib/domain/phone";
 import { isOverdue } from "@/lib/domain/schedule";
 import { idSchema } from "@/lib/validation/group";
 import {
   CancelCycleForm,
   CompleteCycleButton,
   ContributionsForm,
+  CorrectContributionForm,
   CycleSetupForm,
   PayFeeButton,
   PayoutButton,
@@ -44,6 +46,9 @@ function Notices({ q }: { q: Record<string, string | string[] | undefined> }) {
       {n > 0 && <Alert tone="success">{n} paiement{n > 1 ? "s" : ""} enregistré{n > 1 ? "s" : ""} (simulation).</Alert>}
       {q.verse === "1" && <Alert tone="success">Versement enregistré (simulation). Les frais LIKELEMBA du tour (1 USD) sont à régler.</Alert>}
       {q.frais === "1" && <Alert tone="success">Frais LIKELEMBA réglés (simulation).</Alert>}
+      {q.corrige === "1" && (
+        <Alert tone="success">Cotisation corrigée. L&apos;opération reste visible dans l&apos;historique avec son motif.</Alert>
+      )}
       {q.termine === "1" && <Alert tone="success">Cycle terminé : tout le monde a reçu son tour.</Alert>}
       {q.annule === "1" && <Alert tone="warning">Cycle annulé. L&apos;historique est conservé.</Alert>}
     </>
@@ -68,6 +73,14 @@ function Tracking({ group, view, canRecord, q }: { group: GroupDetail; view: Cyc
       receiptNumber: c?.receiptNumber ?? null,
       paidAt: c?.paidAt ?? null,
       key: crypto.randomUUID(),
+      reminderHref:
+        !paid && canRecord && active && m.phone
+          ? whatsappLink(
+              m.phone,
+              `Bonjour ${m.fullName}, petit rappel du likelemba « ${group.name} » : ta cotisation de ${formatMoney(cycle.contribution)} ` +
+                `pour le tour ${round.round} (${formatDate(round.dueDate)}) n'est pas encore enregistrée. Merci !`,
+            )
+          : null,
     };
   });
   const paidCount = allRows.filter((r) => r.status === "paid").length;
@@ -200,6 +213,30 @@ function Tracking({ group, view, canRecord, q }: { group: GroupDetail; view: Cyc
           )}
         </div>
       </Card>
+
+      {canRecord && active && round.payout?.status !== "paid" && paidCount > 0 && (
+        <Card>
+          <details>
+            <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-brand-700">
+              Corriger une cotisation enregistrée par erreur…
+            </summary>
+            <p className="mb-3 text-sm text-muted">
+              La cotisation est annulée avec votre motif (rien n&apos;est effacé). Possible tant que la cagnotte de ce
+              tour n&apos;a pas été versée.
+            </p>
+            <CorrectContributionForm
+              groupId={group.id}
+              round={round.round}
+              options={members
+                .filter((m) => contributions[m.participantId]?.status === "confirmed")
+                .map((m) => ({
+                  contributionId: contributions[m.participantId].id,
+                  label: `${m.fullName} — reçu ${contributions[m.participantId].receiptNumber ?? ""}`,
+                }))}
+            />
+          </details>
+        </Card>
+      )}
 
       <Card>
         <h2 className="text-lg font-bold text-brand-900">Bilan par membre</h2>

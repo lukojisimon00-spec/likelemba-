@@ -42,18 +42,19 @@ Pourquoi ces choix :
 
 | Priorité | Fonctionnalité | État |
 |---|---|---|
-| P0 | Schéma de base, RLS, règles métier, journal d'audit | ✅ Fait et testé (127 tests SQL) |
+| P0 | Schéma de base, RLS, règles métier, journal d'audit | ✅ Fait et testé (154 tests SQL) |
 | P0 | Modèle « maman likelemba » : part du responsable par tour, 1 USD LIKELEMBA par tour versé | ✅ Base + calculs faits et testés (migration du 19/11/2026) — interface en phase 4 |
 | P1 | Contacter un membre sur WhatsApp (lien wa.me pré-rempli) | ✅ Bouton sur la page du groupe |
 | P0 | Inscription, connexion, déconnexion, mot de passe oublié, profil | ✅ Code fait — à vérifier avec un vrai projet Supabase |
 | P0 | Page d'accueil, mentions légales et confidentialité (modèles) | ✅ Fait |
 | P0 | Tableau de bord (indicateurs réels, vides tant qu'il n'y a pas de groupe) | ✅ Fait |
 | P1 | Création, modification, archivage de groupes (interface) | ✅ Fait — testé dans un navigateur (360 et 320 px) sur une base locale |
-| P1 | Ajout et retrait de membres (interface) | ✅ Fait et testé — la modification d'un membre (nom, numéro, rôle) reste à faire |
+| P1 | Ajout, modification et retrait de membres (interface) | ✅ Fait et testé |
 | P1 | Cycles : participants, ordre des tours (flèches ou tirage au sort), calendrier, démarrage | ✅ Fait et testé dans le navigateur |
 | P1 | Suivi : qui a payé / pas payé / en retard, qui a reçu / pas encore reçu, reçus SIM- | ✅ Fait et testé (reçu imprimable : à faire) |
 | P1 | Versements simulés, frais 1 USD par tour, clôture et annulation de cycle | ✅ Fait et testé |
-| P2 | Invitation d'un membre à rattacher son compte | ⏳ Phase 4 (nouvelle migration) |
+| P2 | Invitation d'un membre par lien (WhatsApp, partage, copie) | ✅ Fait et testé (migration 20261119000400) |
+| P1 | Correction traçable d'une cotisation, rappel WhatsApp, historique du groupe, « À surveiller » | ✅ Fait et testé |
 | P2 | Préférences de réception (Mobile Money / banque) | ⏳ Phase 4 — table prête |
 | P2 | Espace administrateur (statistiques, suspension, journaux) | ⏳ Phase 5 — fonctions SQL prêtes |
 | P3 | Application installable (PWA complète) | Plus tard (manifeste et icônes du nouveau logo prêts) |
@@ -117,6 +118,12 @@ hors du groupe, annulation, affichage à 320 px. Le test des pages groupes (28 v
 
 **Confidentialité entre groupes** : un utilisateur ne voit que les groupes dont il est le maman likelemba ou
 un membre rattaché. C'est imposé par la base (RLS), vérifié par les tests SQL et dans le navigateur.
+
+### Audit du 19/11/2026
+
+Diagnostic complet (A à I) : voir [`docs/AUDIT.md`](AUDIT.md). Prochaines priorités : mise en ligne (PR vers `main`,
+mise à jour Next.js, Supabase + Vercel), reçu de cotisation, moyen de paiement / référence, coordonnées de
+réception, espace administrateur.
 
 ## 5. Risques identifiés
 

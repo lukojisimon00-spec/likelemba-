@@ -514,6 +514,107 @@ select tests.throws('Carol ne modifie pas l''ordre chez Bob',
 reset role;
 
 -- -----------------------------------------------------------------------------
+-- Invitations par lien (groupe de Bob)
+-- -----------------------------------------------------------------------------
+select set_config('request.jwt.claims', json_build_object('sub', :carol)::text, false);
+set role authenticated;
+select tests.throws('Carol ne crée pas d''invitation chez Bob',
+  format('select public.create_member_invitation(%L)', :'bob_m2'), 'accès refusé');
+reset role;
+
+select set_config('request.jwt.claims', json_build_object('sub', :bob)::text, false);
+set role authenticated;
+select public.create_member_invitation(:'bob_m2') as tok1 \gset
+select tests.eq('jeton long et aléatoire', char_length(:'tok1') >= 40, true);
+select tests.eq('seule l''empreinte du jeton est stockée',
+  (select count(*) from public.group_invitations), 1::bigint);
+select tests.throws('le navigateur ne lit pas l''empreinte',
+  $q$select token_hash from public.group_invitations$q$, 'permission denied');
+select tests.throws('écriture directe d''invitation interdite',
+  format($q$insert into public.group_invitations (group_id, member_id, token_hash) values (%L, %L, repeat('a', 64))$q$, :'bob_group', :'bob_m2'),
+  'permission denied');
+select tests.throws('on n''invite pas un membre déjà rattaché',
+  format('select public.create_member_invitation(%L)', :'bob_m1'), 'déjà rattaché');
+select public.create_member_invitation(:'bob_m2') as tok2 \gset
+select tests.eq('un nouveau lien révoque le précédent',
+  (select count(*) from public.group_invitations where revoked_at is not null), 1::bigint);
+reset role;
+
+select set_config('request.jwt.claims', json_build_object('sub', :carol)::text, false);
+set role authenticated;
+select tests.eq('aperçu du lien valable',
+  (select group_name || '|' || member_name || '|' || state from public.get_invitation_preview(:'tok2')),
+  'Groupe de Bob|Gaby|valid');
+select tests.eq('aperçu d''un lien révoqué', (select state from public.get_invitation_preview(:'tok1')), 'revoked');
+select tests.eq('aperçu d''un lien inconnu', (select state from public.get_invitation_preview('nimporte-quoi')), 'invalid');
+select tests.eq('Carol ne voit pas les invitations', (select count(*) from public.group_invitations), 0::bigint);
+select tests.eq('avant acceptation, Carol ne voit pas le groupe de Bob',
+  (select count(*) from public.groups where id = :'bob_group'), 0::bigint);
+select tests.throws('lien inconnu refusé', $q$select public.accept_invitation('faux-jeton')$q$, 'invalide');
+select tests.throws('lien révoqué refusé', format('select public.accept_invitation(%L)', :'tok1'), 'annulé');
+select tests.eq('acceptation : renvoie le groupe', public.accept_invitation(:'tok2'), :'bob_group'::uuid);
+select tests.eq('accepter deux fois ne fait rien de plus', public.accept_invitation(:'tok2'), :'bob_group'::uuid);
+select tests.eq('après acceptation, Carol voit le groupe de Bob',
+  (select count(*) from public.groups where id = :'bob_group'), 1::bigint);
+select tests.eq('la fiche Gaby est rattachée au compte de Carol',
+  (select profile_id from public.group_members where id = :'bob_m2'), :carol::uuid);
+select tests.throws('un simple membre ne crée pas d''invitation',
+  format('select public.create_member_invitation(%L)', :'bob_m3'), 'accès refusé');
+reset role;
+
+select set_config('request.jwt.claims', json_build_object('sub', :fay)::text, false);
+set role authenticated;
+select tests.throws('lien déjà utilisé refusé', format('select public.accept_invitation(%L)', :'tok2'), 'déjà été utilisé');
+reset role;
+select set_config('request.jwt.claims', json_build_object('sub', :bob)::text, false);
+set role authenticated;
+select public.create_member_invitation(:'bob_m3') as tok3 \gset
+reset role;
+update public.group_invitations set expires_at = now() - interval '1 day' where member_id = :'bob_m3' and revoked_at is null;
+select set_config('request.jwt.claims', json_build_object('sub', :fay)::text, false);
+set role authenticated;
+select tests.throws('lien expiré refusé', format('select public.accept_invitation(%L)', :'tok3'), 'expiré');
+reset role;
+
+-- -----------------------------------------------------------------------------
+-- Correction traçable d'une cotisation (groupe de Bob, tour 1)
+-- -----------------------------------------------------------------------------
+select c.id as gaby_r1 from public.contributions c
+join public.contribution_schedules s on s.id = c.schedule_id
+where c.participant_id = (select id from public.cycle_participants where member_id = :'bob_m2')
+  and s.round_number = 1 and c.status = 'confirmed' \gset
+select set_config('request.jwt.claims', json_build_object('sub', :carol)::text, false);
+set role authenticated;
+select tests.throws('un simple membre ne corrige pas une cotisation',
+  format($q$select public.cancel_contribution(%L, 'erreur de saisie')$q$, :'gaby_r1'), 'accès refusé');
+reset role;
+select set_config('request.jwt.claims', json_build_object('sub', :bob)::text, false);
+set role authenticated;
+select tests.throws('motif de correction obligatoire',
+  format($q$select public.cancel_contribution(%L, 'abc')$q$, :'gaby_r1'), 'motif');
+select public.cancel_contribution(:'gaby_r1', 'Enregistrée par erreur');
+select tests.eq('cotisation corrigée, conservée avec son motif',
+  (select status || '|' || cancellation_reason || '|' || (paid_at is null) from public.contributions where id = :'gaby_r1'),
+  'cancelled|Enregistrée par erreur|true');
+select tests.eq('la correction est journalisée avec l''ancienne valeur',
+  (select count(*) from public.audit_logs where entity_type = 'contributions' and entity_id = :'gaby_r1'
+     and action = 'update' and details -> 'status' ->> 'old' = 'confirmed'), 1::bigint);
+select tests.throws('on ne corrige pas deux fois',
+  format($q$select public.cancel_contribution(%L, 'deuxième essai')$q$, :'gaby_r1'), 'confirmée');
+-- Nouvel enregistrement possible, puis versement : plus de correction ensuite.
+select public.record_simulated_contribution(s.id, p.id, 'bob-r1-fix-' || p.payout_position || '-key')
+from public.contribution_schedules s join public.cycle_participants p on p.cycle_id = s.cycle_id
+where s.round_number = 1 and not exists (
+  select 1 from public.contributions c where c.schedule_id = s.id and c.participant_id = p.id and c.status = 'confirmed');
+select public.mark_payout_paid_simulated(po.id) from public.payout_orders po
+join public.contribution_schedules s on s.id = po.schedule_id where s.round_number = 1 and s.cycle_id = :'bob_cycle';
+select tests.throws('pas de correction après le versement du tour',
+  format($q$select public.cancel_contribution(id, 'trop tard') from public.contributions
+           where participant_id = (select id from public.cycle_participants where member_id = %L)
+             and status = 'confirmed' limit 1$q$, :'bob_m2'), 'déjà été versée');
+reset role;
+
+-- -----------------------------------------------------------------------------
 -- Administration
 -- -----------------------------------------------------------------------------
 select set_config('request.jwt.claims', json_build_object('sub', :carol)::text, false);

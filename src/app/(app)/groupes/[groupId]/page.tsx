@@ -3,14 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert, ButtonLink, Card, SimulationBadge } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
-import { getGroupDetail, type GroupDetail } from "@/lib/data/groups";
+import { getGroupDetail, getPendingInvitations, type GroupDetail } from "@/lib/data/groups";
 import { formatDate } from "@/lib/dates";
 import { computeTurnBreakdown, validateOrganizerCommission } from "@/lib/domain/fees";
 import { CURRENCY_LABELS, formatMoney } from "@/lib/domain/money";
 import { formatDrcPhone, whatsappLink } from "@/lib/domain/phone";
 import { FREQUENCY_LABELS } from "@/lib/domain/schedule";
 import { MEMBER_ROLE_LABELS, idSchema } from "@/lib/validation/group";
-import { AddMemberForm, ArchiveGroupForm, RemoveMemberForm } from "./member-forms";
+import { AddMemberForm, ArchiveGroupForm, InviteMemberPanel, RemoveMemberForm } from "./member-forms";
 
 export const metadata: Metadata = { title: "Groupe" };
 
@@ -80,6 +80,7 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
   const active = group.members.filter((m) => m.status !== "removed");
   const removed = group.members.filter((m) => m.status === "removed");
   const full = active.length >= group.maxMembers;
+  const invitations = canManage ? await getPendingInvitations(group.id) : new Map();
 
   return (
     <div className="flex flex-col gap-6">
@@ -93,6 +94,13 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
         </Alert>
       )}
       {query.modifie === "1" && <Alert tone="success">Modifications enregistrées.</Alert>}
+      {query.bienvenue === "1" && (
+        <Alert tone="success" title="Bienvenue dans le groupe">
+          Votre compte est maintenant rattaché à ce likelemba. Vous pouvez suivre le calendrier, les cotisations et
+          les versements.
+        </Alert>
+      )}
+      {query.membre === "1" && <Alert tone="success">Membre modifié.</Alert>}
       {query.archive === "1" && (
         <Alert tone="success">Groupe archivé. Il ne peut plus être modifié ; son historique reste consultable.</Alert>
       )}
@@ -115,11 +123,18 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
             Maman likelemba : <span className="font-semibold text-ink">{group.ownerName}</span>
           </p>
         </div>
-        {canManage && (
-          <ButtonLink href={`/groupes/${group.id}/modifier`} variant="secondary">
-            Modifier le groupe
-          </ButtonLink>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {canManage && (
+            <ButtonLink href={`/groupes/${group.id}/modifier`} variant="secondary">
+              Modifier le groupe
+            </ButtonLink>
+          )}
+          {group.isOwner && (
+            <ButtonLink href={`/groupes/${group.id}/historique`} variant="ghost">
+              Historique
+            </ButtonLink>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -206,8 +221,35 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
                       WhatsApp
                     </a>
                   )}
+                  {canManage && (
+                    <ButtonLink
+                      href={`/groupes/${group.id}/membres/${m.id}`}
+                      variant="ghost"
+                      className="text-sm"
+                      aria-label={`Modifier ${m.fullName}`}
+                    >
+                      Modifier
+                    </ButtonLink>
+                  )}
                   {canManage && m.role !== "manager" && (
                     <RemoveMemberForm groupId={group.id} memberId={m.id} name={m.fullName} />
+                  )}
+                  {canManage && m.role !== "manager" && !m.hasAccount && (
+                    <InviteMemberPanel
+                      memberId={m.id}
+                      memberName={m.fullName}
+                      phone={m.phone}
+                      groupName={group.name}
+                      groupId={group.id}
+                      pending={
+                        invitations.has(m.id)
+                          ? {
+                              invitationId: invitations.get(m.id)!.invitationId,
+                              expiresLabel: formatDate(invitations.get(m.id)!.expiresAt.slice(0, 10)),
+                            }
+                          : null
+                      }
+                    />
                   )}
                 </div>
               </li>

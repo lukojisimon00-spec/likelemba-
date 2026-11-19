@@ -50,3 +50,11 @@ export function whatsappLink(phone: string, message?: string): string | null {
   const text = message?.trim();
   return text ? `${base}?text=${encodeURIComponent(text)}` : base;
 }
+
+/**
+ * Lien WhatsApp « choisir un contact » (sans numéro) avec un message pré-rempli,
+ * pour partager une invitation quand le numéro du membre n'est pas connu.
+ */
+export function whatsappShareLink(message: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(message.trim())}`;
+}

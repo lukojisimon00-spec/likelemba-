@@ -102,3 +102,49 @@ export async function getDashboardData(userId: string): Promise<DashboardData | 
     partial,
   };
 }
+
+export type WatchItem = {
+  groupId: string;
+  groupName: string;
+  cycleNumber: number;
+  lateMembers: number;
+  participants: number;
+  nextBeneficiary: { name: string; dueDate: string } | null;
+};
+
+/**
+ * Cycles en cours à surveiller : prochain bénéficiaire et membres en retard.
+ * Calculé à partir des données réelles (cycle_member_summary, soumise à RLS).
+ */
+export async function getWatchlist(): Promise<WatchItem[]> {
+  const supabase = await createClient();
+  if (!supabase) return [];
+  const today = todayIso();
+  const { data: cycles } = await supabase
+    .from("cycles")
+    .select("id, cycle_number, group_id, groups(name)")
+    .eq("status", "active")
+    .order("started_at", { ascending: false })
+    .limit(10);
+
+  type CycleRow = { id: string; cycle_number: number; group_id: string; groups: { name: string } | null };
+  type SummaryRow = { full_name: string; late_count: number; payout_status: string | null; payout_due_date: string | null };
+  const items = await Promise.all(
+    ((cycles ?? []) as unknown as CycleRow[]).map(async (c) => {
+      const { data } = await supabase.rpc("cycle_member_summary", { p_cycle_id: c.id, p_today: today });
+      const rows = (data ?? []) as SummaryRow[];
+      const next = rows
+        .filter((r) => r.payout_status === "pending" && r.payout_due_date)
+        .sort((a, b) => (a.payout_due_date! < b.payout_due_date! ? -1 : 1))[0];
+      return {
+        groupId: c.group_id,
+        groupName: c.groups?.name ?? "Groupe",
+        cycleNumber: c.cycle_number,
+        lateMembers: rows.filter((r) => r.late_count > 0).length,
+        participants: rows.length,
+        nextBeneficiary: next ? { name: next.full_name, dueDate: next.payout_due_date! } : null,
+      };
+    }),
+  );
+  return items;
+}

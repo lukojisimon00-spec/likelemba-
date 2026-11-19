@@ -28,7 +28,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
       </div>
       <p className="mt-6 text-center text-sm text-muted">
         Pas encore de compte ?{" "}
-        <Link href="/inscription" className="font-semibold text-brand-700 underline">
+        <Link href={`/inscription?suite=${encodeURIComponent(suite)}`} className="font-semibold text-brand-700 underline">
           Créer un compte
         </Link>
       </p>

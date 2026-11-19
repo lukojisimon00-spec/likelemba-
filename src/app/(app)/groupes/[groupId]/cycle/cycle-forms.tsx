@@ -1,14 +1,15 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { startTransition, useActionState, useMemo, useState } from "react";
 import { SubmitButton } from "@/components/submit-button";
-import { Alert, Field, buttonClass } from "@/components/ui";
+import { Alert, Field, SelectField, buttonClass } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { validateOrganizerCommission } from "@/lib/domain/fees";
 import { formatMoney, type Money } from "@/lib/domain/money";
 import { buildSchedule, type Frequency } from "@/lib/domain/schedule";
 import { initialFormState, type FormState } from "@/lib/forms/state";
 import {
+  cancelContributionAction,
   cancelCycleAction,
   completeCycleAction,
   launchCycleAction,
@@ -201,6 +202,8 @@ export type ContributionRow = {
   receiptNumber: string | null;
   paidAt: string | null;
   key: string;
+  /** Lien WhatsApp de rappel (membre qui n'a pas payé et dont le numéro est connu). */
+  reminderHref?: string | null;
 };
 
 /** Pointage des cotisations d'un tour : cases à cocher pour ceux qui ont payé. */
@@ -281,6 +284,17 @@ export function ContributionsForm({
                   {r.receiptNumber && <span className="mt-0.5 text-xs text-muted">Reçu {r.receiptNumber}</span>}
                 </span>
               </label>
+              {r.reminderHref && (
+                <a
+                  href={r.reminderHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 shrink-0 items-center rounded-xl px-2 text-xs font-semibold text-[#1f7a43] underline"
+                  aria-label={`Envoyer un rappel WhatsApp à ${r.name}`}
+                >
+                  Rappel WhatsApp
+                </a>
+              )}
             </li>
           );
         })}
@@ -372,6 +386,62 @@ export function CancelCycleForm({ groupId, cycleId }: { groupId: string; cycleId
       <SubmitButton variant="danger" pendingLabel="Annulation…" className="sm:w-auto sm:self-start">
         Annuler le cycle
       </SubmitButton>
+    </form>
+  );
+}
+
+/** Correction d'une cotisation enregistrée par erreur (avant le versement du tour). */
+export function CorrectContributionForm({
+  groupId,
+  round,
+  options,
+}: {
+  groupId: string;
+  round: number;
+  options: { contributionId: string; label: string }[];
+}) {
+  const [state, action, pending] = useActionState(cancelContributionAction, initialFormState);
+  // Envoi manuel : React vide sinon le formulaire après une erreur, et le choix serait perdu.
+  const [selected, setSelected] = useState("");
+  const [reason, setReason] = useState("");
+  return (
+    <form
+      className="flex flex-col gap-3"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => action(fd));
+      }}
+    >
+      {state.error && <Alert tone="error">{state.error}</Alert>}
+      <input type="hidden" name="groupId" value={groupId} />
+      <input type="hidden" name="round" value={round} />
+      <SelectField
+        label="Cotisation à corriger"
+        name="contributionId"
+        value={selected}
+        onChange={(e) => setSelected(e.target.value)}
+        options={[{ value: "", label: "Choisir…" }, ...options.map((o) => ({ value: o.contributionId, label: o.label }))]}
+        error={state.fieldErrors?.contributionId}
+      />
+      <Field
+        label="Motif de la correction"
+        name="reason"
+        required
+        placeholder="Ex. : enregistrée par erreur, la personne n'a pas encore payé"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        error={state.fieldErrors?.reason}
+      />
+      <button
+        type="submit"
+        disabled={pending}
+        aria-busy={pending}
+        className={buttonClass("secondary", "sm:w-auto sm:self-start")}
+      >
+        {pending ? "Correction…" : "Annuler cette cotisation"}
+      </button>
     </form>
   );
 }

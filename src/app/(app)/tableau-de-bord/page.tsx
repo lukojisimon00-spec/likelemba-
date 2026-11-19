@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Alert, ButtonLink, Card, SimulationBadge } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { describeActivity } from "@/lib/data/activity";
-import { getDashboardData } from "@/lib/data/dashboard";
+import { getDashboardData, getWatchlist } from "@/lib/data/dashboard";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import { formatMoney } from "@/lib/domain/money";
 
@@ -21,7 +21,7 @@ function Stat({ label, value, hint }: { label: string; value: number; hint?: str
 export default async function DashboardPage({ searchParams }: PageProps<"/tableau-de-bord">) {
   const user = await requireUser();
   const params = await searchParams;
-  const data = await getDashboardData(user.id);
+  const [data, watch] = await Promise.all([getDashboardData(user.id), getWatchlist()]);
   const firstName = user.fullName.split(" ")[0];
 
   return (
@@ -55,6 +55,36 @@ export default async function DashboardPage({ searchParams }: PageProps<"/tablea
             <Stat label="Cotisations enregistrées" value={data.confirmedContributions} hint="simulées" />
             <Stat label="Versements en attente" value={data.pendingPayouts} hint="simulés" />
           </section>
+
+          {watch.length > 0 && (
+            <Card>
+              <h2 className="text-lg font-bold text-brand-900">À surveiller</h2>
+              <ul className="mt-3 divide-y divide-line">
+                {watch.map((w) => (
+                  <li key={`${w.groupId}-${w.cycleNumber}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold break-words text-ink">
+                        {w.groupName} <span className="font-normal text-muted">· cycle n° {w.cycleNumber}</span>
+                      </p>
+                      <p className="text-sm text-muted">
+                        {w.nextBeneficiary
+                          ? `Prochain bénéficiaire : ${w.nextBeneficiary.name}, le ${formatDate(w.nextBeneficiary.dueDate)}`
+                          : "Tous les tours ont été versés"}
+                      </p>
+                      {w.lateMembers > 0 && (
+                        <p className="text-sm font-semibold text-red-700">
+                          ⚠ {w.lateMembers} membre{w.lateMembers > 1 ? "s" : ""} en retard sur {w.participants}
+                        </p>
+                      )}
+                    </div>
+                    <ButtonLink href={`/groupes/${w.groupId}/cycle`} variant="secondary" className="text-sm">
+                      Suivre
+                    </ButtonLink>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {data.visibleGroups === 0 && (
             <Card className="border-dashed">

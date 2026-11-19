@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "@/lib/env";
 
 /** Pages réservées aux utilisateurs connectés. */
-export const PROTECTED_PREFIXES = ["/tableau-de-bord", "/profil", "/groupes", "/admin"];
+export const PROTECTED_PREFIXES = ["/tableau-de-bord", "/profil", "/groupes", "/admin", "/invitation"];
 
 export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

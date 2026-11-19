@@ -45,7 +45,7 @@ export function SignInForm({ suite }: { suite?: string }) {
   );
 }
 
-export function SignUpForm() {
+export function SignUpForm({ suite }: { suite?: string }) {
   const [state, action] = useActionState(signUpAction, initialFormState);
   if (state.success) {
     return (
@@ -56,6 +56,7 @@ export function SignUpForm() {
   }
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
+      <input type="hidden" name="suite" value={suite ?? ""} />
       {state.error && <Alert tone="error">{state.error}</Alert>}
       <Field
         label="Nom complet"

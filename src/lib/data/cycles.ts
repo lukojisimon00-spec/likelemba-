@@ -47,6 +47,7 @@ export type MemberSummary = {
 };
 
 export type RoundContribution = {
+  id: string;
   participantId: string;
   status: "pending" | "confirmed" | "failed" | "cancelled";
   receiptNumber: string | null;
@@ -187,17 +188,19 @@ export async function getCycleView(cycle: CycleInfo, requestedRound?: number): P
   if (selected) {
     const { data, error } = await supabase
       .from("contributions")
-      .select("participant_id, status, receipt_number, paid_at")
+      .select("id, participant_id, status, receipt_number, paid_at")
       .eq("schedule_id", selected.scheduleId)
       .in("status", ["confirmed", "pending"]);
     contribError = Boolean(error);
     for (const row of (data ?? []) as {
+      id: string;
       participant_id: string;
       status: RoundContribution["status"];
       receipt_number: string | null;
       paid_at: string | null;
     }[]) {
       contributions[row.participant_id] = {
+        id: row.id,
         participantId: row.participant_id,
         status: row.status,
         receiptNumber: row.receipt_number,

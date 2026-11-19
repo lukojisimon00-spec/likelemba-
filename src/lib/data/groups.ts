@@ -27,6 +27,8 @@ export type GroupMember = {
   hasAccount: boolean;
   /** Fiche rattachée au compte de l'utilisateur connecté. */
   isMe: boolean;
+  /** Compte rattaché (sert à afficher l'auteur d'une opération dans l'historique). */
+  profileId: string | null;
   joinedAt: string;
   removedAt: string | null;
   removalReason: string | null;
@@ -138,6 +140,7 @@ export async function getGroupDetail(groupId: string, userId: string): Promise<G
       status: m.status,
       hasAccount: m.profile_id !== null,
       isMe: m.profile_id === userId,
+      profileId: m.profile_id,
       joinedAt: m.joined_at,
       removedAt: m.removed_at,
       removalReason: m.removal_reason,
@@ -171,4 +174,24 @@ export async function getGroupDetail(groupId: string, userId: string): Promise<G
     myRole: row.owner_id === userId ? "manager" : (me?.role ?? null),
     members: list,
   };
+}
+
+export type InvitationStatus = { memberId: string; invitationId: string; expiresAt: string };
+
+/** Invitations encore valables d'un groupe (visibles du responsable seulement, sinon liste vide). */
+export async function getPendingInvitations(groupId: string): Promise<Map<string, InvitationStatus>> {
+  const supabase = await createClient();
+  const result = new Map<string, InvitationStatus>();
+  if (!supabase) return result;
+  const { data } = await supabase
+    .from("group_invitations")
+    .select("id, member_id, expires_at")
+    .eq("group_id", groupId)
+    .is("accepted_at", null)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString());
+  for (const row of (data ?? []) as { id: string; member_id: string; expires_at: string }[]) {
+    result.set(row.member_id, { memberId: row.member_id, invitationId: row.id, expiresAt: row.expires_at });
+  }
+  return result;
 }

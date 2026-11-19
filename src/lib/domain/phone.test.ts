@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDrcPhone, isValidDrcPhone, normalizeDrcPhone, whatsappLink } from "./phone";
+import { formatDrcPhone, isValidDrcPhone, normalizeDrcPhone, whatsappLink, whatsappShareLink } from "./phone";
 
 describe("normalizeDrcPhone", () => {
   it.each([
@@ -41,5 +41,13 @@ describe("whatsappLink", () => {
 
   it("refuse un numéro invalide", () => {
     expect(whatsappLink("+33612345678")).toBeNull();
+  });
+});
+
+describe("whatsappShareLink", () => {
+  it("partage un message sans numéro", () => {
+    expect(whatsappShareLink("Rejoins : https://x.test/invitation/abc")).toBe(
+      "https://wa.me/?text=Rejoins%20%3A%20https%3A%2F%2Fx.test%2Finvitation%2Fabc",
+    );
   });
 });

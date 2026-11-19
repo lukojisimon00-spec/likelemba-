@@ -48,19 +48,21 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   if (!supabase) return NOT_CONFIGURED;
 
   const { fullName, email, phone, password } = parsed.data;
+  // Page à ouvrir après confirmation (ex. une invitation), uniquement un chemin interne.
+  const suite = safeRedirectPath(formData.get("suite"));
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       // Ces métadonnées servent uniquement à pré-remplir le profil (voir handle_new_user).
       data: { full_name: fullName, phone },
-      emailRedirectTo: `${await siteUrl()}/auth/confirm?suite=/tableau-de-bord`,
+      emailRedirectTo: `${await siteUrl()}/auth/confirm?suite=${encodeURIComponent(suite)}`,
     },
   });
   if (error) return { error: authErrorMessage(error), values };
 
   // Si la confirmation par e-mail est désactivée, l'utilisateur est déjà connecté.
-  if (data.session) redirect("/tableau-de-bord");
+  if (data.session) redirect(suite);
 
   return {
     success:

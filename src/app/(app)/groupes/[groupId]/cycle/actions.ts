@@ -179,3 +179,30 @@ export async function cancelCycleAction(_prev: FormState, formData: FormData): P
   revalidatePath("/", "layout");
   redirect(cyclePath(groupId.data, "annule=1"));
 }
+
+/** Correction d'une cotisation enregistrée par erreur (motif obligatoire, traçable). */
+export async function cancelContributionAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const groupId = idSchema.safeParse(formData.get("groupId"));
+  const contributionId = idSchema.safeParse(formData.get("contributionId"));
+  const round = z.coerce.number().int().positive().safeParse(formData.get("round"));
+  const reason = z.string().trim().min(5).max(500).safeParse(formData.get("reason"));
+  if (!groupId.success || !round.success) return { error: "Formulaire invalide." };
+  if (!contributionId.success) return { fieldErrors: { contributionId: "Choisissez la cotisation à corriger." } };
+  if (!reason.success) {
+    return {
+      fieldErrors: { reason: "Indiquez le motif (au moins 5 caractères)." },
+      values: { reason: String(formData.get("reason") ?? ""), contributionId: contributionId.data },
+    };
+  }
+
+  const ctx = await authed();
+  if ("error" in ctx) return { error: ctx.error };
+  const { error } = await ctx.supabase.rpc("cancel_contribution", {
+    p_contribution_id: contributionId.data,
+    p_reason: reason.data,
+  });
+  if (error) return { error: dbErrorMessage(error, "Impossible de corriger cette cotisation.") };
+
+  revalidatePath("/", "layout");
+  redirect(cyclePath(groupId.data, `tour=${round.data}&corrige=1`));
+}

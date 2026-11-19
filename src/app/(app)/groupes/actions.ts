@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { dbErrorMessage } from "@/lib/data/db-errors";
 import { formValues, type FormState } from "@/lib/forms/state";
+import { getSiteUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors } from "@/lib/validation/auth";
 import { groupRow, groupSchema, idSchema, memberSchema, removeMemberSchema } from "@/lib/validation/group";
@@ -126,4 +127,61 @@ export async function removeMemberAction(_prev: FormState, formData: FormData): 
   revalidatePath("/", "layout");
   // Le membre quitte la liste : la confirmation s'affiche en haut de la page du groupe.
   redirect(`/groupes/${groupId.data}?retire=1`);
+}
+
+/** Crée un lien d'invitation personnel pour un membre sans compte (jeton affiché une seule fois). */
+export async function createInvitationAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const memberId = idSchema.safeParse(formData.get("memberId"));
+  if (!memberId.success) return { error: "Membre introuvable." };
+
+  const ctx = await authed();
+  if ("error" in ctx) return { error: ctx.error };
+  const { data, error } = await ctx.supabase.rpc("create_member_invitation", { p_member_id: memberId.data });
+  if (error || typeof data !== "string") return { error: dbErrorMessage(error, "Impossible de créer le lien.") };
+
+  return { success: "Lien créé.", values: { link: `${getSiteUrl()}/invitation/${data}` } };
+}
+
+export async function revokeInvitationAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const invitationId = idSchema.safeParse(formData.get("invitationId"));
+  const groupId = idSchema.safeParse(formData.get("groupId"));
+  if (!invitationId.success || !groupId.success) return { error: "Invitation introuvable." };
+
+  const ctx = await authed();
+  if ("error" in ctx) return { error: ctx.error };
+  const { error } = await ctx.supabase.rpc("revoke_member_invitation", { p_invitation_id: invitationId.data });
+  if (error) return { error: dbErrorMessage(error, "Impossible d'annuler le lien.") };
+
+  revalidatePath(`/groupes/${groupId.data}`);
+  return { success: "Lien annulé." };
+}
+
+/** Modification d'un membre : nom, téléphone et, sauf pour le responsable, rôle. */
+export async function updateMemberAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const values = formValues(formData, ["fullName", "phone", "role"]);
+  const memberId = idSchema.safeParse(formData.get("memberId"));
+  const groupId = idSchema.safeParse(formData.get("groupId"));
+  if (!memberId.success || !groupId.success) return { error: "Membre introuvable.", values };
+  const isManager = formData.get("isManager") === "1";
+  const parsed = memberSchema.safeParse({ ...values, role: isManager ? "member" : values.role });
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values };
+
+  const ctx = await authed();
+  if ("error" in ctx) return { error: ctx.error, values };
+  const patch: { full_name: string; phone: string | null; role?: string } = {
+    full_name: parsed.data.fullName,
+    phone: parsed.data.phone,
+  };
+  if (!isManager) patch.role = parsed.data.role;
+  const { data, error } = await ctx.supabase
+    .from("group_members")
+    .update(patch)
+    .eq("id", memberId.data)
+    .eq("group_id", groupId.data)
+    .select("id");
+  if (error) return { error: dbErrorMessage(error, "Impossible d'enregistrer ce membre."), values };
+  if (!data?.length) return { error: "Seul le maman likelemba (responsable) peut modifier ce membre.", values };
+
+  revalidatePath("/", "layout");
+  redirect(`/groupes/${groupId.data}?membre=1`);
 }
