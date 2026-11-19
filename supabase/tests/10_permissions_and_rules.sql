@@ -453,6 +453,67 @@ select tests.throws('devise du groupe figée après un cycle',
 reset role;
 
 -- -----------------------------------------------------------------------------
+-- Ordre des tours en une opération et bilan par membre (groupe de Bob)
+-- -----------------------------------------------------------------------------
+select set_config('request.jwt.claims', json_build_object('sub', :bob)::text, false);
+set role authenticated;
+insert into public.groups (name, currency, contribution_amount, frequency, max_members, organizer_commission)
+values ('Groupe de Bob', 'USD', 20, 'weekly', 5, 5);
+select id as bob_group from public.groups \gset
+insert into public.group_members (group_id, full_name) values (:'bob_group', 'Gaby'), (:'bob_group', 'Hervé');
+select id as bob_m1 from public.group_members where role = 'manager' \gset
+select id as bob_m2 from public.group_members where full_name = 'Gaby' \gset
+select id as bob_m3 from public.group_members where full_name = 'Hervé' \gset
+insert into public.cycles (group_id, start_date) values (:'bob_group', '2026-11-02');
+select id as bob_cycle from public.cycles \gset
+
+select tests.throws('ordre : au moins 2 participants',
+  format('select public.set_cycle_order(%L, array[%L]::uuid[])', :'bob_cycle', :'bob_m1'), 'au moins 2');
+select tests.throws('ordre : pas de doublon',
+  format('select public.set_cycle_order(%L, array[%L, %L]::uuid[])', :'bob_cycle', :'bob_m1', :'bob_m1'), 'qu''une fois');
+reset role;
+select id as alice_member from public.group_members where full_name = 'Carol Mbuyi' \gset
+set role authenticated;
+select tests.throws('ordre : membre du groupe d''Alice refusé',
+  format('select public.set_cycle_order(%L, array[%L, %L]::uuid[])', :'bob_cycle', :'bob_m1', :'alice_member'), 'membres actifs');
+
+select public.set_cycle_order(:'bob_cycle', array[:'bob_m2', :'bob_m3', :'bob_m1']::uuid[]);
+select tests.eq('ordre enregistré (Gaby, Hervé, Bob)',
+  (select string_agg(m.full_name, ',' order by p.payout_position) from public.cycle_participants p
+   join public.group_members m on m.id = p.member_id), 'Gaby,Hervé,Bob');
+select public.set_cycle_order(:'bob_cycle', array[:'bob_m1', :'bob_m2']::uuid[]);
+select tests.eq('ordre remplacé en une fois (2 participants)',
+  (select count(*) from public.cycle_participants), 2::bigint);
+select public.set_cycle_order(:'bob_cycle', array[:'bob_m2', :'bob_m3', :'bob_m1']::uuid[]);
+select public.prepare_cycle(:'bob_cycle');
+select tests.throws('ordre figé après la préparation',
+  format('select public.set_cycle_order(%L, array[%L, %L]::uuid[])', :'bob_cycle', :'bob_m1', :'bob_m2'), 'brouillon');
+select public.start_cycle(:'bob_cycle');
+
+-- Tour 1 (2 novembre) : Gaby et Hervé paient, Bob non. On se place au 10 novembre.
+select public.record_simulated_contribution(s.id, p.id, 'bob-r1-' || p.payout_position || '-key')
+from public.contribution_schedules s join public.cycle_participants p on p.cycle_id = s.cycle_id
+join public.group_members m on m.id = p.member_id
+where s.round_number = 1 and m.full_name in ('Gaby', 'Hervé');
+select tests.eq('bilan : Bob a 2 tours dus, 0 payé, 2 en retard',
+  (select due_count || '/' || paid_count || '/' || late_count from public.cycle_member_summary(:'bob_cycle', '2026-11-10')
+   where full_name = 'Bob'), '2/0/2');
+select tests.eq('bilan : Gaby a payé le tour 1, en retard pour le tour 2',
+  (select due_count || '/' || paid_count || '/' || late_count from public.cycle_member_summary(:'bob_cycle', '2026-11-10')
+   where full_name = 'Gaby'), '2/1/1');
+select tests.eq('bilan : personne n''a encore reçu la cagnotte',
+  (select count(*) from public.cycle_member_summary(:'bob_cycle', '2026-11-10') where payout_status = 'paid'), 0::bigint);
+reset role;
+
+select set_config('request.jwt.claims', json_build_object('sub', :carol)::text, false);
+set role authenticated;
+select tests.eq('Carol ne voit pas le bilan du groupe de Bob',
+  (select count(*) from public.cycle_member_summary(:'bob_cycle', '2026-11-10')), 0::bigint);
+select tests.throws('Carol ne modifie pas l''ordre chez Bob',
+  format('select public.set_cycle_order(%L, array[%L, %L]::uuid[])', :'bob_cycle', :'bob_m1', :'bob_m2'), 'accès refusé');
+reset role;
+
+-- -----------------------------------------------------------------------------
 -- Administration
 -- -----------------------------------------------------------------------------
 select set_config('request.jwt.claims', json_build_object('sub', :carol)::text, false);
@@ -465,7 +526,7 @@ reset role;
 
 select set_config('request.jwt.claims', json_build_object('sub', :admin)::text, false);
 set role authenticated;
-select tests.eq('l''administrateur voit tous les groupes', (select count(*) from public.groups), 2::bigint);
+select tests.eq('l''administrateur voit tous les groupes', (select count(*) from public.groups), 3::bigint);
 select tests.eq('l''administrateur ne voit pas les coordonnées de paiement',
   (select count(*) from public.payment_destinations), 0::bigint);
 select tests.throws('motif de suspension obligatoire',

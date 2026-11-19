@@ -24,13 +24,14 @@ export const FEATURES: Feature[] = [
   },
   {
     title: "Cycles et ordre des tours",
-    description: "Définissez l'ordre des bénéficiaires et suivez le calendrier des échéances.",
-    available: false,
+    description: "Choisissez l'ordre des bénéficiaires (ou tirez au sort) et suivez le calendrier des tours.",
+    available: true,
   },
   {
     title: "Cotisations et reçus",
-    description: "Enregistrez les cotisations, repérez les retards et remettez un reçu à chaque membre.",
-    available: false,
+    description:
+      "Voyez qui a payé, qui est en retard, qui a déjà reçu la cagnotte et qui attend son tour. Paiements simulés avec reçu numéroté.",
+    available: true,
   },
   {
     title: "Historique transparent",

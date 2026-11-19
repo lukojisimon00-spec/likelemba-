@@ -42,7 +42,7 @@ Pourquoi ces choix :
 
 | Priorité | Fonctionnalité | État |
 |---|---|---|
-| P0 | Schéma de base, RLS, règles métier, journal d'audit | ✅ Fait et testé (116 tests SQL) |
+| P0 | Schéma de base, RLS, règles métier, journal d'audit | ✅ Fait et testé (127 tests SQL) |
 | P0 | Modèle « maman likelemba » : part du responsable par tour, 1 USD LIKELEMBA par tour versé | ✅ Base + calculs faits et testés (migration du 19/11/2026) — interface en phase 4 |
 | P1 | Contacter un membre sur WhatsApp (lien wa.me pré-rempli) | ✅ Bouton sur la page du groupe |
 | P0 | Inscription, connexion, déconnexion, mot de passe oublié, profil | ✅ Code fait — à vérifier avec un vrai projet Supabase |
@@ -50,13 +50,14 @@ Pourquoi ces choix :
 | P0 | Tableau de bord (indicateurs réels, vides tant qu'il n'y a pas de groupe) | ✅ Fait |
 | P1 | Création, modification, archivage de groupes (interface) | ✅ Fait — testé dans un navigateur (360 et 320 px) sur une base locale |
 | P1 | Ajout et retrait de membres (interface) | ✅ Fait et testé — la modification d'un membre (nom, numéro, rôle) reste à faire |
-| P1 | Cycles : participants, ordre des tours, préparation, frais, démarrage | ⏳ Phase 4 |
-| P1 | Cotisations simulées, retards, reçus « SIMULATION » | ⏳ Phase 4 |
-| P1 | Versements simulés et clôture de cycle | ⏳ Phase 4 |
+| P1 | Cycles : participants, ordre des tours (flèches ou tirage au sort), calendrier, démarrage | ✅ Fait et testé dans le navigateur |
+| P1 | Suivi : qui a payé / pas payé / en retard, qui a reçu / pas encore reçu, reçus SIM- | ✅ Fait et testé (reçu imprimable : à faire) |
+| P1 | Versements simulés, frais 1 USD par tour, clôture et annulation de cycle | ✅ Fait et testé |
 | P2 | Invitation d'un membre à rattacher son compte | ⏳ Phase 4 (nouvelle migration) |
 | P2 | Préférences de réception (Mobile Money / banque) | ⏳ Phase 4 — table prête |
 | P2 | Espace administrateur (statistiques, suspension, journaux) | ⏳ Phase 5 — fonctions SQL prêtes |
-| P3 | Application installable (PWA complète) | Plus tard (manifeste déjà présent) |
+| P3 | Application installable (PWA complète) | Plus tard (manifeste et icônes du nouveau logo prêts) |
+| — | Logo professionnel (proposition B « la pièce qui tourne ») | ✅ Installé ; propositions A et C disponibles |
 | P4 | Paiements réels | ❌ Phase 8 uniquement, après conformité (voir `docs/PAIEMENTS.md`) |
 
 ## 3 bis. Modèle économique (décision du propriétaire, 19/11/2026)
@@ -89,9 +90,10 @@ Points encore à confirmer par le propriétaire :
 1. Générer les types TypeScript de la base (`supabase gen types`).
 2. ✅ Pages « Mes groupes » : liste, création avec aperçu du tour, modification, archivage (19/11/2026).
 3. ✅ Page d'un groupe : ajout et retrait de membres, bouton WhatsApp. Reste : modifier un membre.
-4. Cycle : choix des participants, ordre des tours (avec aperçu du calendrier et du montant net), préparation, démarrage.
-5. Suivi du cycle : échéances, cotisations attendues / reçues / en retard, enregistrement d'une cotisation simulée, reçu imprimable.
-6. Versements simulés (création automatique des frais 1 USD du tour), règlement simulé des frais, clôture.
+4. ✅ Cycle : participants, ordre des tours, tirage au sort, aperçu du calendrier, démarrage (19/11/2026).
+5. ✅ Suivi du cycle (page `/groupes/[id]/cycle`) : pointage des cotisations par cases à cocher, retards, bilan par
+   membre. Reste : reçu imprimable, rappel WhatsApp aux retardataires.
+6. ✅ Versements simulés, frais 1 USD par tour, clôture, annulation.
 7. Invitation des membres (lien ou code) pour rattacher leur compte, partage du lien sur WhatsApp et Facebook.
 
 **Phase 5 — administration** : espace `/admin` (statistiques, groupes, journaux, suspension), tests de permissions supplémentaires.
@@ -106,6 +108,15 @@ Test de bout en bout dans Chromium (28 vérifications), sur un PostgreSQL local 
 et PostgREST (le moteur d'API de Supabase). Seule la connexion était simulée : le vrai service de comptes
 Supabase n'a pas pu être lancé ici. **À refaire sur votre vrai projet Supabase** (phase 3).
 Bug trouvé et corrigé : la création d'un groupe était refusée par la base (migration `20261119000200`).
+
+### Vérification du 19/11/2026 (cycles)
+
+33 vérifications dans Chromium sur la même base locale : préparation (ordre, exclusion d'un membre, calendrier),
+pointage, versement, frais, bilan, filtres, lecture seule pour un simple membre, refus (404) pour une personne
+hors du groupe, annulation, affichage à 320 px. Le test des pages groupes (28 vérifications) a été relancé : OK.
+
+**Confidentialité entre groupes** : un utilisateur ne voit que les groupes dont il est le maman likelemba ou
+un membre rattaché. C'est imposé par la base (RLS), vérifié par les tests SQL et dans le navigateur.
 
 ## 5. Risques identifiés
 

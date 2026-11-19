@@ -154,9 +154,23 @@ export default async function GroupPage({ params, searchParams }: PageProps<"/gr
           <div className="mt-3">
             <TurnSummary group={group} />
           </div>
-          <p className="mt-3 text-xs text-muted">
-            Les cycles (ordre des tours, cotisations, versements) arrivent dans la prochaine version.
-          </p>
+          <div className="mt-4 border-t border-line pt-4">
+            {group.hasOpenCycle ? (
+              <ButtonLink href={`/groupes/${group.id}/cycle`} className="w-full sm:w-auto">
+                Suivre les paiements du cycle
+              </ButtonLink>
+            ) : canManage ? (
+              <ButtonLink href={`/groupes/${group.id}/cycle`} className="w-full sm:w-auto">
+                {group.hasCycles ? "Lancer un nouveau cycle" : "Lancer le premier cycle"}
+              </ButtonLink>
+            ) : group.hasCycles ? (
+              <ButtonLink href={`/groupes/${group.id}/cycle`} variant="secondary" className="w-full sm:w-auto">
+                Voir le dernier cycle
+              </ButtonLink>
+            ) : (
+              <p className="text-sm text-muted">Aucun cycle n&apos;a encore démarré.</p>
+            )}
+          </div>
         </Card>
       </div>
 

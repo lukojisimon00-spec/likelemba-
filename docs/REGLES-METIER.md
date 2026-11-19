@@ -61,6 +61,18 @@ par une nouvelle migration.
   maman likelemba **10 USD** (dont 1 USD pour LIKELEMBA : il lui reste 9 USD).
 - Les frais LIKELEMBA ne sont **jamais** retirés de la somme du bénéficiaire.
 
+### Préparation depuis l'interface
+
+- Le maman likelemba choisit les participants et l'ordre (flèches ou tirage au sort) ; l'ordre est enregistré
+  en une seule opération (`set_cycle_order`), puis le cycle est préparé et démarré.
+- Bilan par membre (`cycle_member_summary`) : cotisations dues à ce jour, payées, en retard, et si la cagnotte
+  a déjà été reçue. Visible des membres du groupe uniquement (RLS).
+
+## Confidentialité
+
+- Chaque utilisateur ne voit **que** les groupes qu'il a créés ou dont il est membre rattaché, et leurs membres.
+- Les frais LIKELEMBA ne sont visibles que du maman likelemba (et de l'administrateur de la plateforme).
+
 ## Cotisations (simulées)
 
 - Montant et devise repris de l'échéance : le navigateur ne peut pas les choisir.
