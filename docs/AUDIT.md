@@ -81,7 +81,7 @@ et affiché comme tel (« SIMULATION — AUCUN ARGENT RÉEL ») : cotisations, v
 | Aucune clé secrète dans le code ; seule la clé publique est utilisée | ✅ |
 | Redirections limitées aux chemins internes | ✅ (y compris le nouveau retour vers une invitation après inscription) |
 | En-têtes de sécurité (X-Frame-Options, nosniff, Referrer-Policy…) | ✅ |
-| **Next.js 16.4.3 : vulnérabilité « modérée » connue** (fuite de cache avec `use cache` / `unstable_cache`). LIKELEMBA n'utilise pas ces fonctions : risque réel faible. Mais le build s'arrête au premier essai, ce qui peut bloquer GitHub et Vercel. | ⚠ Mise à jour 16.4.6 recommandée (en attente de votre accord) |
+| **Next.js 16.4.3 : vulnérabilité « modérée » connue** (fuite de cache avec `use cache` / `unstable_cache`). LIKELEMBA n'utilise pas ces fonctions : risque réel faible. L'arrêt du build au premier essai ne se produit **que dans une session d'assistant IA** ; vérifié : un build « machine neuve » (comme Vercel / GitHub) passe du premier coup. | ⚠ Mise à jour 16.4.6 recommandée (en attente de votre accord), non bloquante |
 | Limitation des abus (trop de tentatives de connexion) | Gérée par Supabase Auth ; à vérifier dans les réglages du projet |
 | Inscription depuis une invitation : Supabase doit autoriser l'adresse de retour `…/auth/confirm?suite=…` | ✅ Couvert par les adresses `…/**` déjà prévues dans `docs/DEPLOIEMENT.md` (étape A3) |
 
@@ -104,7 +104,7 @@ et affiché comme tel (« SIMULATION — AUCUN ARGENT RÉEL ») : cotisations, v
 ## H. Obstacles avant un test par de vrais utilisateurs
 
 1. Fusionner la branche de travail dans `main` (Pull Request, avec votre accord).
-2. Mettre à jour Next.js (16.4.6) pour que le build passe du premier coup.
+2. Mettre à jour Next.js (16.4.6) pour la sécurité (non bloquant pour la mise en ligne).
 3. Projet Supabase réel : appliquer les migrations, configurer les adresses de retour, tester l'inscription par e-mail.
 4. Déployer sur Vercel et refaire un parcours complet sur un vrai téléphone Android.
 

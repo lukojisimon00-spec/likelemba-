@@ -24,7 +24,17 @@ Méthode simple, sans rien installer :
 1. Dans Supabase : **SQL Editor** → **New query**.
 2. Ouvrez sur GitHub le fichier `supabase/migrations/20261028000100_core_schema.sql`, copiez tout son contenu,
    collez-le, cliquez **Run**. Vous devez voir « Success ».
-3. Recommencez, **dans l'ordre**, avec `20261028000200_business_rules.sql` puis `20261028000300_rls_policies.sql`.
+3. Recommencez, **dans l'ordre** (une requête par fichier, « Success » à chaque fois) :
+   1. `20261028000100_core_schema.sql`
+   2. `20261028000200_business_rules.sql`
+   3. `20261028000300_rls_policies.sql`
+   4. `20261119000100_maman_likelemba_commission.sql`
+   5. `20261119000200_groups_owner_select.sql`
+   6. `20261119000300_cycle_order_and_summary.sql`
+   7. `20261119000400_invitations_and_corrections.sql`
+
+   Prenez les fichiers sur la branche qui sera déployée (aujourd'hui : `ccr-189ba268-oqm5nf`, en attendant
+   la fusion dans `main`). En cas d'erreur, arrêtez-vous et notez le message : ne relancez pas un fichier déjà passé.
 
 Méthode avec la ligne de commande (ordinateur) :
 ```bash
@@ -59,6 +69,9 @@ dans **Authentication → Emails → Templates** :
   <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&suite=/nouveau-mot-de-passe">Choisir un nouveau mot de passe</a>
   ```
 Vous pouvez traduire le reste du texte en français.
+
+> Membre invité qui crée son compte : après avoir confirmé son e-mail, il arrive sur son tableau de bord.
+> Il lui suffit de rouvrir le lien d'invitation (toujours valable) pour rejoindre le groupe.
 
 > Le serveur d'e-mails intégré à Supabase est limité et réservé aux tests. Avant l'ouverture au public,
 > configurez un SMTP (Authentication → Emails → SMTP Settings) avec un service d'envoi d'e-mails.
